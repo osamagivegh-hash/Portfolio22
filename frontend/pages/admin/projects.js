@@ -18,6 +18,8 @@ export default function AdminProjects() {
     demo: '',
     featured: false
   })
+  const [selectedImage, setSelectedImage] = useState(null)
+  const [imagePreview, setImagePreview] = useState(null)
 
   useEffect(() => {
     fetchProjects()
@@ -55,6 +57,18 @@ export default function AdminProjects() {
     })
   }
 
+  const handleImageChange = (e) => {
+    const file = e.target.files[0]
+    if (file) {
+      setSelectedImage(file)
+      const reader = new FileReader()
+      reader.onload = (e) => {
+        setImagePreview(e.target.result)
+      }
+      reader.readAsDataURL(file)
+    }
+  }
+
   const handleSubmit = async (e) => {
     e.preventDefault()
     setMessage('')
@@ -67,6 +81,11 @@ export default function AdminProjects() {
       Object.keys(formData).forEach(key => {
         formDataToSend.append(key, formData[key])
       })
+
+      // Add image file if selected
+      if (selectedImage) {
+        formDataToSend.append('image', selectedImage)
+      }
 
       const url = editingProject 
         ? (process.env.NEXT_PUBLIC_API_URL 
@@ -96,6 +115,8 @@ export default function AdminProjects() {
           demo: '',
           featured: false
         })
+        setSelectedImage(null)
+        setImagePreview(null)
         fetchProjects()
       } else {
         const result = await response.json()
@@ -116,6 +137,8 @@ export default function AdminProjects() {
       demo: project.demo || '',
       featured: project.featured || false
     })
+    setSelectedImage(null)
+    setImagePreview(project.image ? (project.image.startsWith('http') ? project.image : `${window.location.origin}${project.image}`) : null)
     setIsModalOpen(true)
   }
 
@@ -157,6 +180,8 @@ export default function AdminProjects() {
       demo: '',
       featured: false
     })
+    setSelectedImage(null)
+    setImagePreview(null)
     setIsModalOpen(true)
   }
 
@@ -171,6 +196,8 @@ export default function AdminProjects() {
       demo: '',
       featured: false
     })
+    setSelectedImage(null)
+    setImagePreview(null)
   }
 
   if (isLoading) {
@@ -327,6 +354,30 @@ export default function AdminProjects() {
                       className="input-field"
                       placeholder="Enter project title"
                     />
+                  </div>
+
+                  <div>
+                    <label htmlFor="image" className="block text-sm font-medium text-gray-700 mb-1">
+                      Project Image
+                    </label>
+                    <input
+                      type="file"
+                      id="image"
+                      name="image"
+                      accept="image/*"
+                      onChange={handleImageChange}
+                      className="input-field"
+                    />
+                    {imagePreview && (
+                      <div className="mt-2">
+                        <img
+                          src={imagePreview}
+                          alt="Preview"
+                          className="w-full h-48 object-cover rounded-lg border"
+                        />
+                        <p className="text-sm text-gray-500 mt-1">Image preview</p>
+                      </div>
+                    )}
                   </div>
 
                   <div>
