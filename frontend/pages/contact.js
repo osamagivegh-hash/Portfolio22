@@ -1,6 +1,7 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import Layout from '../components/Layout'
 import Head from 'next/head'
+import { fetchPortfolioData } from '../utils/api'
 
 export default function Contact() {
   const [formData, setFormData] = useState({
@@ -10,6 +11,23 @@ export default function Contact() {
   })
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [submitStatus, setSubmitStatus] = useState(null)
+  const [profile, setProfile] = useState(null)
+  const [isLoading, setIsLoading] = useState(true)
+
+  useEffect(() => {
+    fetchProfileData()
+  }, [])
+
+  const fetchProfileData = async () => {
+    try {
+      const data = await fetchPortfolioData()
+      setProfile(data.profile)
+    } catch (error) {
+      console.error('Error fetching profile data:', error)
+    } finally {
+      setIsLoading(false)
+    }
+  }
 
   const handleChange = (e) => {
     setFormData({
@@ -154,15 +172,31 @@ export default function Contact() {
                   Contact Information
                 </h2>
                 
-                <div className="space-y-4">
+                {isLoading ? (
+                  <div className="space-y-4">
+                    <div className="animate-pulse">
+                      <div className="h-4 bg-gray-200 rounded w-3/4 mb-2"></div>
+                      <div className="h-4 bg-gray-200 rounded w-1/2"></div>
+                    </div>
+                    <div className="animate-pulse">
+                      <div className="h-4 bg-gray-200 rounded w-3/4 mb-2"></div>
+                      <div className="h-4 bg-gray-200 rounded w-1/2"></div>
+                    </div>
+                    <div className="animate-pulse">
+                      <div className="h-4 bg-gray-200 rounded w-3/4 mb-2"></div>
+                      <div className="h-4 bg-gray-200 rounded w-1/2"></div>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="space-y-4">
                   <div className="flex items-center">
                     <svg className="w-6 h-6 text-primary-600 mr-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 4.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
                     </svg>
                     <div>
                       <p className="font-medium text-gray-900">Email</p>
-                      <a href="mailto:john@example.com" className="text-primary-600 hover:text-primary-700">
-                        john@example.com
+                      <a href={`mailto:${profile?.email || 'john@example.com'}`} className="text-primary-600 hover:text-primary-700">
+                        {profile?.email || 'john@example.com'}
                       </a>
                     </div>
                   </div>
@@ -173,8 +207,8 @@ export default function Contact() {
                     </svg>
                     <div>
                       <p className="font-medium text-gray-900">GitHub</p>
-                      <a href="https://github.com" target="_blank" rel="noopener noreferrer" className="text-primary-600 hover:text-primary-700">
-                        github.com/username
+                      <a href={profile?.github || 'https://github.com'} target="_blank" rel="noopener noreferrer" className="text-primary-600 hover:text-primary-700">
+                        {profile?.github ? profile.github.replace('https://', '') : 'github.com/username'}
                       </a>
                     </div>
                   </div>
@@ -185,12 +219,13 @@ export default function Contact() {
                     </svg>
                     <div>
                       <p className="font-medium text-gray-900">LinkedIn</p>
-                      <a href="https://linkedin.com" target="_blank" rel="noopener noreferrer" className="text-primary-600 hover:text-primary-700">
-                        linkedin.com/in/username
+                      <a href={profile?.linkedin || 'https://linkedin.com'} target="_blank" rel="noopener noreferrer" className="text-primary-600 hover:text-primary-700">
+                        {profile?.linkedin ? profile.linkedin.replace('https://', '') : 'linkedin.com/in/username'}
                       </a>
                     </div>
                   </div>
                 </div>
+                )}
               </div>
 
               <div className="card">
