@@ -24,10 +24,10 @@ export default function Contact() {
     setSubmitStatus(null)
 
     try {
-      // Use relative URL in production, absolute in development
-      const apiUrl = process.env.NODE_ENV === 'production' 
-        ? '/api/contact' 
-        : `${process.env.NEXT_PUBLIC_API_URL}/api/contact`
+      // Use environment variable if set, otherwise use relative URLs in production
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL 
+        ? `${process.env.NEXT_PUBLIC_API_URL}/api/contact`
+        : '/api/contact'
       
       const response = await fetch(apiUrl, {
         method: 'POST',

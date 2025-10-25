@@ -1,9 +1,8 @@
 // API utility functions for fetching portfolio data
 
-// Use relative URLs in production, absolute URLs in development
-const API_BASE_URL = process.env.NODE_ENV === 'production' 
-  ? '' // Use relative URLs in production (same domain)
-  : (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000')
+// Use environment variable if set, otherwise use relative URLs in production
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 
+  (process.env.NODE_ENV === 'production' ? '' : 'http://localhost:5000')
 
 // Fetch portfolio data (public endpoint - no auth required)
 export const fetchPortfolioData = async () => {
