@@ -25,7 +25,12 @@ export default function AdminLogin() {
     setError('')
 
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/admin/login`, {
+      // Use environment variable if set, otherwise use relative URLs in production
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL 
+        ? `${process.env.NEXT_PUBLIC_API_URL}/api/admin/login`
+        : '/api/admin/login'
+      
+      const response = await fetch(apiUrl, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

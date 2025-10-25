@@ -15,7 +15,11 @@ export default function AdminDashboard() {
   const fetchPortfolioData = async () => {
     try {
       const token = localStorage.getItem('adminToken')
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/admin/portfolio`, {
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL 
+        ? `${process.env.NEXT_PUBLIC_API_URL}/api/admin/portfolio`
+        : '/api/admin/portfolio'
+      
+      const response = await fetch(apiUrl, {
         headers: {
           'Authorization': `Bearer ${token}`
         }

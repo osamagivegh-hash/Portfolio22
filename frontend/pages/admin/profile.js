@@ -24,7 +24,7 @@ export default function AdminProfile() {
   const fetchProfileData = async () => {
     try {
       const token = localStorage.getItem('adminToken')
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/admin/portfolio`, {
+      const response = await fetch(`${(process.env.NEXT_PUBLIC_API_URL || '')}/api/admin/portfolio`, {
         headers: {
           'Authorization': `Bearer ${token}`
         }
@@ -58,7 +58,7 @@ export default function AdminProfile() {
 
     try {
       const token = localStorage.getItem('adminToken')
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/admin/portfolio/profile`, {
+      const response = await fetch(`${(process.env.NEXT_PUBLIC_API_URL || '')}/api/admin/portfolio/profile`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -89,7 +89,7 @@ export default function AdminProfile() {
 
     try {
       const token = localStorage.getItem('adminToken')
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/admin/portfolio/profile/image`, {
+      const response = await fetch(`${(process.env.NEXT_PUBLIC_API_URL || '')}/api/admin/portfolio/profile/image`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`
