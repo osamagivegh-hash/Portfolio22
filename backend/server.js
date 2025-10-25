@@ -3,6 +3,7 @@ const helmet = require('helmet');
 const cors = require('cors');
 const compression = require('compression');
 const path = require('path');
+const fs = require('fs');
 require('dotenv').config();
 
 const app = express();
@@ -29,6 +30,23 @@ app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 // API Routes
 app.get('/api/test', (req, res) => {
   res.json({ message: "Backend is working correctly" });
+});
+
+app.get('/api/health', (req, res) => {
+  const frontendExists = fs.existsSync(frontendPath);
+  const indexPath = path.join(frontendPath, 'index.html');
+  const indexExists = fs.existsSync(indexPath);
+  
+  res.json({
+    status: 'ok',
+    timestamp: new Date().toISOString(),
+    frontend: {
+      path: frontendPath,
+      exists: frontendExists,
+      indexExists: indexExists
+    },
+    environment: process.env.NODE_ENV || 'development'
+  });
 });
 
 app.post('/api/contact', (req, res) => {
@@ -66,7 +84,15 @@ app.post('/api/contact', (req, res) => {
 
 // Serve static files from the Next.js build
 const frontendPath = path.join(__dirname, '../frontend/out');
-app.use(express.static(frontendPath));
+
+// Check if frontend build exists
+if (!fs.existsSync(frontendPath)) {
+  console.error(`Frontend build directory not found: ${frontendPath}`);
+  console.error('Make sure to run the build command first');
+} else {
+  console.log(`Serving static files from: ${frontendPath}`);
+  app.use(express.static(frontendPath));
+}
 
 // Fallback route for client-side routing (SPA)
 app.get('*', (req, res) => {
@@ -75,7 +101,21 @@ app.get('*', (req, res) => {
     return res.status(404).json({ error: 'API endpoint not found' });
   }
   
-  res.sendFile(path.join(frontendPath, 'index.html'));
+  // Check if frontend build exists before serving
+  if (!fs.existsSync(frontendPath)) {
+    return res.status(500).json({ 
+      error: 'Frontend not built. Please run the build command first.' 
+    });
+  }
+  
+  const indexPath = path.join(frontendPath, 'index.html');
+  if (fs.existsSync(indexPath)) {
+    res.sendFile(indexPath);
+  } else {
+    res.status(500).json({ 
+      error: 'Frontend build incomplete. index.html not found.' 
+    });
+  }
 });
 
 // Error handling middleware

@@ -182,20 +182,43 @@ The project uses Tailwind CSS. Customize colors and styles in:
 
 ## 🐛 Troubleshooting
 
+### 502 Bad Gateway Error
+If you see a 502 Bad Gateway error after deployment:
+
+1. **Check Render logs** in your dashboard for specific error messages
+2. **Test the health endpoint**: Visit `https://your-app.onrender.com/api/health`
+3. **Verify build process**: The logs should show "Serving static files from: /opt/render/project/src/frontend/out"
+4. **Check if frontend build exists**: The health endpoint will show if the build directory exists
+
 ### Build fails on Render
 - Check that all dependencies are listed in `package.json`
 - Verify build command is correct
 - Check Render build logs for specific errors
+- Ensure both backend and frontend dependencies are installed
 
 ### Contact form not working
 - Verify API URL is correct
 - Check browser console for errors
 - Ensure backend is running and accessible
+- Test the `/api/test` endpoint to verify backend is working
 
 ### Static files not loading
 - Verify frontend build completed successfully
 - Check that `frontend/out` directory exists
 - Ensure backend is serving from correct path
+- Check the `/api/health` endpoint for build status
+
+### Debug Commands
+```bash
+# Test build locally
+node test-build.js
+
+# Check health endpoint
+curl https://your-app.onrender.com/api/health
+
+# Test API endpoint
+curl https://your-app.onrender.com/api/test
+```
 
 ## 📦 Dependencies
 
