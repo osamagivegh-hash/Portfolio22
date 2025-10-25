@@ -6,6 +6,9 @@ const path = require('path');
 const fs = require('fs');
 require('dotenv').config();
 
+// Import database connection
+const connectDB = require('./config/database');
+
 // Import admin routes
 const adminRoutes = require('./routes/admin');
 
@@ -58,7 +61,7 @@ app.get('/api/health', (req, res) => {
 // Admin routes
 app.use('/api/admin', adminRoutes);
 
-app.post('/api/contact', (req, res) => {
+app.post('/api/contact', async (req, res) => {
   try {
     const { name, email, message } = req.body;
     
@@ -69,16 +72,28 @@ app.post('/api/contact', (req, res) => {
       });
     }
 
-    // Log the contact form submission
-    console.log('Contact form submission:', {
+    // Import Message model
+    const Message = require('./models/Message');
+
+    // Save message to database
+    const newMessage = new Message({
       name,
       email,
       message,
+      ip: req.ip,
+      userAgent: req.get('User-Agent')
+    });
+
+    await newMessage.save();
+
+    // Log the contact form submission
+    console.log('Contact form submission saved:', {
+      id: newMessage._id,
+      name,
+      email,
       timestamp: new Date().toISOString()
     });
 
-    // In a real application, you would save this to a database
-    // For now, we'll just log it and return a success response
     res.json({ 
       success: true, 
       message: 'Thank you for your message! I will get back to you soon.' 
@@ -133,11 +148,24 @@ app.use((err, req, res, next) => {
   res.status(500).json({ error: 'Internal server error' });
 });
 
-// Start server
-app.listen(PORT, () => {
-  console.log(`Server is running on port ${PORT}`);
-  console.log(`Environment: ${process.env.NODE_ENV || 'development'}`);
-  console.log(`Frontend path: ${frontendPath}`);
-});
+// Connect to MongoDB and start server
+const startServer = async () => {
+  try {
+    // Connect to MongoDB
+    await connectDB();
+    
+    // Start server
+    app.listen(PORT, () => {
+      console.log(`Server is running on port ${PORT}`);
+      console.log(`Environment: ${process.env.NODE_ENV || 'development'}`);
+      console.log(`Frontend path: ${frontendPath}`);
+    });
+  } catch (error) {
+    console.error('Failed to start server:', error);
+    process.exit(1);
+  }
+};
+
+startServer();
 
 module.exports = app;

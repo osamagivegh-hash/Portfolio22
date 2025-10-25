@@ -8,8 +8,10 @@ A full-stack personal portfolio website built with **Next.js** (frontend) and **
 - **Backend API**: Express.js server with contact form endpoint
 - **Admin Dashboard**: Complete admin panel for content management
 - **Authentication**: JWT-based admin authentication system
+- **MongoDB Integration**: Persistent data storage with MongoDB Atlas
 - **Dynamic Content**: Portfolio content managed through admin dashboard
 - **File Uploads**: Image upload functionality for projects and profile
+- **Contact Messages**: Contact form submissions stored in database
 - **Static Export**: Next.js static export served by Express
 - **Single Deployment**: Both frontend and backend deployed as one service
 - **Production Ready**: Includes security headers, compression, and CORS handling
@@ -22,8 +24,18 @@ Portfolio22/
 │   ├── server.js          # Express server
 │   ├── routes/            # API routes
 │   │   └── admin.js       # Admin API endpoints
+│   ├── models/            # MongoDB models
+│   │   ├── User.js        # User model
+│   │   ├── Profile.js     # Profile model
+│   │   ├── Project.js     # Project model
+│   │   ├── Skill.js       # Skill model
+│   │   └── Message.js     # Message model
 │   ├── middleware/        # Custom middleware
 │   │   └── auth.js        # Authentication middleware
+│   ├── config/            # Configuration files
+│   │   └── database.js    # MongoDB connection
+│   ├── scripts/           # Database scripts
+│   │   └── initDB.js      # Database initialization
 │   ├── uploads/           # Uploaded files
 │   ├── package.json       # Backend dependencies
 │   └── env.example        # Environment variables example
@@ -66,17 +78,32 @@ git clone <your-repo-url>
 cd Portfolio22
 ```
 
-2. **Install all dependencies and build**
+2. **Set up environment variables**
+```bash
+# Copy the example environment file
+cp backend/env.example backend/.env
+
+# Edit the .env file with your MongoDB connection string
+# MONGODB_URI=mongodb+srv://osamagivegh:990099@cluster0.npzs81o.mongodb.net/portfolio?retryWrites=true&w=majority
+```
+
+3. **Install all dependencies and build**
 ```bash
 npm run build
 ```
 
-3. **Start the backend server**
+4. **Initialize the database**
+```bash
+cd backend
+npm run init-db
+```
+
+5. **Start the backend server**
 ```bash
 npm start
 ```
 
-4. **Access the application**
+6. **Access the application**
 Open your browser and navigate to `http://localhost:5000`
 
 ## 🔐 Admin Dashboard

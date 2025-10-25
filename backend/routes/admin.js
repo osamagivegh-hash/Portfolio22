@@ -4,7 +4,16 @@ const bcrypt = require('bcryptjs');
 const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
-const { users, JWT_SECRET, authenticateToken, requireAdmin } = require('../middleware/auth');
+const { authenticateToken, requireAdmin } = require('../middleware/auth');
+
+// Import MongoDB models
+const User = require('../models/User');
+const Profile = require('../models/Profile');
+const Project = require('../models/Project');
+const Skill = require('../models/Skill');
+const Message = require('../models/Message');
+
+const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key-change-in-production';
 
 const router = express.Router();
 
@@ -89,18 +98,21 @@ router.post('/login', async (req, res) => {
   try {
     const { username, password } = req.body;
     
-    const user = users.find(u => u.username === username);
+    // Find user in database
+    const user = await User.findOne({ username });
     if (!user) {
       return res.status(401).json({ error: 'Invalid credentials' });
     }
     
-    const isValidPassword = await bcrypt.compare(password, user.password);
+    // Check password
+    const isValidPassword = await user.comparePassword(password);
     if (!isValidPassword) {
       return res.status(401).json({ error: 'Invalid credentials' });
     }
     
+    // Generate JWT token
     const token = jwt.sign(
-      { id: user.id, username: user.username, role: user.role },
+      { id: user._id, username: user.username, role: user.role },
       JWT_SECRET,
       { expiresIn: '24h' }
     );
@@ -108,7 +120,7 @@ router.post('/login', async (req, res) => {
     res.json({
       success: true,
       token,
-      user: { id: user.id, username: user.username, role: user.role }
+      user: { id: user._id, username: user.username, role: user.role }
     });
   } catch (error) {
     console.error('Login error:', error);
@@ -117,15 +129,49 @@ router.post('/login', async (req, res) => {
 });
 
 // Get all portfolio data
-router.get('/portfolio', authenticateToken, requireAdmin, (req, res) => {
-  res.json(portfolioData);
+router.get('/portfolio', authenticateToken, requireAdmin, async (req, res) => {
+  try {
+    const [profile, projects, skills] = await Promise.all([
+      Profile.findOne().sort({ createdAt: -1 }),
+      Project.find().sort({ order: 1, createdAt: -1 }),
+      Skill.find().sort({ order: 1, createdAt: -1 })
+    ]);
+
+    res.json({
+      profile: profile || {
+        name: 'John Doe',
+        title: 'Full-Stack Developer & UI/UX Designer',
+        bio: 'Passionate about creating beautiful, functional, and user-centered digital experiences.',
+        email: 'john@example.com',
+        github: 'https://github.com',
+        linkedin: 'https://linkedin.com',
+        profileImage: '/profile.jpg'
+      },
+      projects: projects || [],
+      skills: skills.map(skill => skill.name) || []
+    });
+  } catch (error) {
+    console.error('Error fetching portfolio data:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
 });
 
 // Update profile
-router.put('/portfolio/profile', authenticateToken, requireAdmin, (req, res) => {
+router.put('/portfolio/profile', authenticateToken, requireAdmin, async (req, res) => {
   try {
-    portfolioData.profile = { ...portfolioData.profile, ...req.body };
-    res.json({ success: true, data: portfolioData.profile });
+    let profile = await Profile.findOne();
+    
+    if (profile) {
+      // Update existing profile
+      Object.assign(profile, req.body);
+      await profile.save();
+    } else {
+      // Create new profile
+      profile = new Profile(req.body);
+      await profile.save();
+    }
+    
+    res.json({ success: true, data: profile });
   } catch (error) {
     console.error('Update profile error:', error);
     res.status(500).json({ error: 'Internal server error' });
@@ -133,14 +179,23 @@ router.put('/portfolio/profile', authenticateToken, requireAdmin, (req, res) => 
 });
 
 // Upload profile image
-router.post('/portfolio/profile/image', authenticateToken, requireAdmin, upload.single('image'), (req, res) => {
+router.post('/portfolio/profile/image', authenticateToken, requireAdmin, upload.single('image'), async (req, res) => {
   try {
     if (!req.file) {
       return res.status(400).json({ error: 'No image file provided' });
     }
     
     const imageUrl = `/uploads/${req.file.filename}`;
-    portfolioData.profile.profileImage = imageUrl;
+    
+    // Update profile in database
+    let profile = await Profile.findOne();
+    if (profile) {
+      profile.profileImage = imageUrl;
+      await profile.save();
+    } else {
+      profile = new Profile({ profileImage: imageUrl });
+      await profile.save();
+    }
     
     res.json({ success: true, imageUrl });
   } catch (error) {
@@ -150,23 +205,29 @@ router.post('/portfolio/profile/image', authenticateToken, requireAdmin, upload.
 });
 
 // Get all projects
-router.get('/portfolio/projects', authenticateToken, requireAdmin, (req, res) => {
-  res.json(portfolioData.projects);
+router.get('/portfolio/projects', authenticateToken, requireAdmin, async (req, res) => {
+  try {
+    const projects = await Project.find().sort({ order: 1, createdAt: -1 });
+    res.json(projects);
+  } catch (error) {
+    console.error('Error fetching projects:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
 });
 
 // Add new project
-router.post('/portfolio/projects', authenticateToken, requireAdmin, upload.single('image'), (req, res) => {
+router.post('/portfolio/projects', authenticateToken, requireAdmin, upload.single('image'), async (req, res) => {
   try {
     const projectData = req.body;
-    const newProject = {
-      id: Date.now(),
+    
+    const newProject = new Project({
       ...projectData,
       technologies: projectData.technologies ? projectData.technologies.split(',').map(t => t.trim()) : [],
       featured: projectData.featured === 'true',
       image: req.file ? `/uploads/${req.file.filename}` : '/project-default.jpg'
-    };
+    });
     
-    portfolioData.projects.push(newProject);
+    await newProject.save();
     res.json({ success: true, project: newProject });
   } catch (error) {
     console.error('Add project error:', error);
@@ -175,12 +236,12 @@ router.post('/portfolio/projects', authenticateToken, requireAdmin, upload.singl
 });
 
 // Update project
-router.put('/portfolio/projects/:id', authenticateToken, requireAdmin, upload.single('image'), (req, res) => {
+router.put('/portfolio/projects/:id', authenticateToken, requireAdmin, upload.single('image'), async (req, res) => {
   try {
-    const projectId = parseInt(req.params.id);
-    const projectIndex = portfolioData.projects.findIndex(p => p.id === projectId);
+    const projectId = req.params.id;
+    const project = await Project.findById(projectId);
     
-    if (projectIndex === -1) {
+    if (!project) {
       return res.status(404).json({ error: 'Project not found' });
     }
     
@@ -195,8 +256,10 @@ router.put('/portfolio/projects/:id', authenticateToken, requireAdmin, upload.si
       updateData.image = `/uploads/${req.file.filename}`;
     }
     
-    portfolioData.projects[projectIndex] = { ...portfolioData.projects[projectIndex], ...updateData };
-    res.json({ success: true, project: portfolioData.projects[projectIndex] });
+    Object.assign(project, updateData);
+    await project.save();
+    
+    res.json({ success: true, project });
   } catch (error) {
     console.error('Update project error:', error);
     res.status(500).json({ error: 'Internal server error' });
@@ -204,16 +267,15 @@ router.put('/portfolio/projects/:id', authenticateToken, requireAdmin, upload.si
 });
 
 // Delete project
-router.delete('/portfolio/projects/:id', authenticateToken, requireAdmin, (req, res) => {
+router.delete('/portfolio/projects/:id', authenticateToken, requireAdmin, async (req, res) => {
   try {
-    const projectId = parseInt(req.params.id);
-    const projectIndex = portfolioData.projects.findIndex(p => p.id === projectId);
+    const projectId = req.params.id;
+    const project = await Project.findByIdAndDelete(projectId);
     
-    if (projectIndex === -1) {
+    if (!project) {
       return res.status(404).json({ error: 'Project not found' });
     }
     
-    portfolioData.projects.splice(projectIndex, 1);
     res.json({ success: true });
   } catch (error) {
     console.error('Delete project error:', error);
@@ -222,11 +284,21 @@ router.delete('/portfolio/projects/:id', authenticateToken, requireAdmin, (req, 
 });
 
 // Update skills
-router.put('/portfolio/skills', authenticateToken, requireAdmin, (req, res) => {
+router.put('/portfolio/skills', authenticateToken, requireAdmin, async (req, res) => {
   try {
     const { skills } = req.body;
-    portfolioData.skills = skills;
-    res.json({ success: true, skills: portfolioData.skills });
+    
+    // Clear existing skills
+    await Skill.deleteMany({});
+    
+    // Add new skills
+    const skillPromises = skills.map((skillName, index) => 
+      new Skill({ name: skillName, order: index }).save()
+    );
+    
+    await Promise.all(skillPromises);
+    
+    res.json({ success: true, skills });
   } catch (error) {
     console.error('Update skills error:', error);
     res.status(500).json({ error: 'Internal server error' });
@@ -234,9 +306,14 @@ router.put('/portfolio/skills', authenticateToken, requireAdmin, (req, res) => {
 });
 
 // Get contact messages
-router.get('/messages', authenticateToken, requireAdmin, (req, res) => {
-  // In production, this would fetch from a database
-  res.json({ messages: [] });
+router.get('/messages', authenticateToken, requireAdmin, async (req, res) => {
+  try {
+    const messages = await Message.find().sort({ createdAt: -1 });
+    res.json({ messages });
+  } catch (error) {
+    console.error('Error fetching messages:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
 });
 
 // Verify token

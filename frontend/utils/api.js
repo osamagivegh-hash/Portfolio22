@@ -7,7 +7,16 @@ export const fetchPortfolioData = async () => {
   try {
     const response = await fetch(`${API_BASE_URL}/api/admin/portfolio`)
     if (response.ok) {
-      return await response.json()
+      const data = await response.json()
+      // Transform MongoDB data to match frontend expectations
+      return {
+        profile: data.profile,
+        projects: data.projects.map(project => ({
+          ...project,
+          id: project._id // Convert MongoDB _id to id for frontend compatibility
+        })),
+        skills: data.skills
+      }
     }
     throw new Error('Failed to fetch portfolio data')
   } catch (error) {
