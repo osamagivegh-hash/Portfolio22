@@ -1,5 +1,6 @@
 import Layout from '../components/Layout'
 import Head from 'next/head'
+import Link from 'next/link'
 
 export default function Home() {
   return (
@@ -39,18 +40,18 @@ export default function Home() {
             </p>
             
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <a
+              <Link
                 href="/projects"
                 className="btn-primary inline-block text-center"
               >
                 View My Work
-              </a>
-              <a
+              </Link>
+              <Link
                 href="/contact"
                 className="btn-secondary inline-block text-center"
               >
                 Get In Touch
-              </a>
+              </Link>
             </div>
           </div>
 
@@ -81,7 +82,7 @@ export default function Home() {
           {/* Quick Links */}
           <div className="text-center">
             <h2 className="text-3xl font-bold text-gray-900 mb-8">
-              Let's Connect
+              Let&apos;s Connect
             </h2>
             
             <div className="flex justify-center space-x-6">

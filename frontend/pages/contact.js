@@ -61,8 +61,8 @@ export default function Contact() {
               Get In Touch
             </h1>
             <p className="text-xl text-gray-600 max-w-2xl mx-auto">
-              I'm always interested in new opportunities and collaborations. 
-              Feel free to reach out if you'd like to work together!
+              I&apos;m always interested in new opportunities and collaborations. 
+              Feel free to reach out if you&apos;d like to work together!
             </p>
           </div>
 
@@ -190,13 +190,13 @@ export default function Contact() {
 
               <div className="card">
                 <h3 className="text-xl font-bold text-gray-900 mb-4">
-                  Let's work together
+                  Let&apos;s work together
                 </h3>
                 <p className="text-gray-600 mb-4">
-                  I'm always open to discussing new projects, creative ideas, or opportunities to be part of your vision.
+                  I&apos;m always open to discussing new projects, creative ideas, or opportunities to be part of your vision.
                 </p>
                 <p className="text-gray-600">
-                  Whether you have a question or just want to say hi, I'll try my best to get back to you!
+                  Whether you have a question or just want to say hi, I&apos;ll try my best to get back to you!
                 </p>
               </div>
             </div>
