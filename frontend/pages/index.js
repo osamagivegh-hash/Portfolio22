@@ -1,8 +1,42 @@
+import { useState, useEffect } from 'react'
 import Layout from '../components/Layout'
 import Head from 'next/head'
 import Link from 'next/link'
+import { fetchPortfolioData } from '../utils/api'
 
 export default function Home() {
+  const [portfolioData, setPortfolioData] = useState(null)
+  const [isLoading, setIsLoading] = useState(true)
+
+  useEffect(() => {
+    const loadData = async () => {
+      try {
+        const data = await fetchPortfolioData()
+        setPortfolioData(data)
+      } catch (error) {
+        console.error('Error loading portfolio data:', error)
+      } finally {
+        setIsLoading(false)
+      }
+    }
+    loadData()
+  }, [])
+
+  if (isLoading) {
+    return (
+      <Layout>
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600 mx-auto"></div>
+            <p className="mt-4 text-gray-600">Loading...</p>
+          </div>
+        </div>
+      </Layout>
+    )
+  }
+
+  const profile = portfolioData?.profile
+  const skills = portfolioData?.skills || []
   return (
     <>
       <Head>
@@ -26,17 +60,15 @@ export default function Home() {
             </div>
             
             <h1 className="text-4xl md:text-6xl font-bold text-gray-900 mb-4">
-              John Doe
+              {profile?.name || 'John Doe'}
             </h1>
             
             <p className="text-xl md:text-2xl text-gray-600 mb-8">
-              Full-Stack Developer & UI/UX Designer
+              {profile?.title || 'Full-Stack Developer & UI/UX Designer'}
             </p>
             
             <p className="text-lg text-gray-500 max-w-3xl mx-auto mb-12">
-              Passionate about creating beautiful, functional, and user-centered digital experiences. 
-              I specialize in modern web technologies and love turning complex problems into simple, 
-              elegant solutions.
+              {profile?.bio || 'Passionate about creating beautiful, functional, and user-centered digital experiences. I specialize in modern web technologies and love turning complex problems into simple, elegant solutions.'}
             </p>
             
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
@@ -62,16 +94,7 @@ export default function Home() {
             </h2>
             
             <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
-              {[
-                'React/Next.js',
-                'Node.js/Express',
-                'TypeScript',
-                'Tailwind CSS',
-                'MongoDB',
-                'PostgreSQL',
-                'AWS',
-                'Docker'
-              ].map((skill) => (
+              {skills.map((skill) => (
                 <div key={skill} className="card text-center">
                   <h3 className="font-semibold text-gray-800">{skill}</h3>
                 </div>
@@ -87,7 +110,7 @@ export default function Home() {
             
             <div className="flex justify-center space-x-6">
               <a
-                href="https://github.com"
+                href={profile?.github || "https://github.com"}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="text-gray-600 hover:text-primary-600 transition-colors duration-200"
@@ -98,7 +121,7 @@ export default function Home() {
               </a>
               
               <a
-                href="https://linkedin.com"
+                href={profile?.linkedin || "https://linkedin.com"}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="text-gray-600 hover:text-primary-600 transition-colors duration-200"
@@ -109,7 +132,7 @@ export default function Home() {
               </a>
               
               <a
-                href="mailto:john@example.com"
+                href={`mailto:${profile?.email || "john@example.com"}`}
                 className="text-gray-600 hover:text-primary-600 transition-colors duration-200"
               >
                 <svg className="w-8 h-8" fill="currentColor" viewBox="0 0 24 24">

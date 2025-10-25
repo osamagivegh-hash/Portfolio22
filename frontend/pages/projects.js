@@ -1,8 +1,40 @@
+import { useState, useEffect } from 'react'
 import Layout from '../components/Layout'
 import Head from 'next/head'
+import { fetchPortfolioData } from '../utils/api'
 
 export default function Projects() {
-  const projects = [
+  const [portfolioData, setPortfolioData] = useState(null)
+  const [isLoading, setIsLoading] = useState(true)
+
+  useEffect(() => {
+    const loadData = async () => {
+      try {
+        const data = await fetchPortfolioData()
+        setPortfolioData(data)
+      } catch (error) {
+        console.error('Error loading portfolio data:', error)
+      } finally {
+        setIsLoading(false)
+      }
+    }
+    loadData()
+  }, [])
+
+  if (isLoading) {
+    return (
+      <Layout>
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600 mx-auto"></div>
+            <p className="mt-4 text-gray-600">Loading projects...</p>
+          </div>
+        </div>
+      </Layout>
+    )
+  }
+
+  const projects = portfolioData?.projects || [
     {
       id: 1,
       title: 'E-Commerce Platform',

@@ -6,6 +6,10 @@ A full-stack personal portfolio website built with **Next.js** (frontend) and **
 
 - **Modern Frontend**: Built with Next.js and React, styled with Tailwind CSS
 - **Backend API**: Express.js server with contact form endpoint
+- **Admin Dashboard**: Complete admin panel for content management
+- **Authentication**: JWT-based admin authentication system
+- **Dynamic Content**: Portfolio content managed through admin dashboard
+- **File Uploads**: Image upload functionality for projects and profile
 - **Static Export**: Next.js static export served by Express
 - **Single Deployment**: Both frontend and backend deployed as one service
 - **Production Ready**: Includes security headers, compression, and CORS handling
@@ -16,14 +20,30 @@ A full-stack personal portfolio website built with **Next.js** (frontend) and **
 Portfolio22/
 ├── backend/
 │   ├── server.js          # Express server
+│   ├── routes/            # API routes
+│   │   └── admin.js       # Admin API endpoints
+│   ├── middleware/        # Custom middleware
+│   │   └── auth.js        # Authentication middleware
+│   ├── uploads/           # Uploaded files
 │   ├── package.json       # Backend dependencies
 │   └── env.example        # Environment variables example
 ├── frontend/
 │   ├── pages/             # Next.js pages
 │   │   ├── index.js       # Home page
 │   │   ├── projects.js    # Projects page
-│   │   └── contact.js     # Contact page
+│   │   ├── contact.js     # Contact page
+│   │   └── admin/         # Admin dashboard pages
+│   │       ├── login.js   # Admin login
+│   │       ├── dashboard.js # Admin dashboard
+│   │       ├── profile.js # Profile management
+│   │       ├── projects.js # Projects management
+│   │       ├── skills.js  # Skills management
+│   │       └── messages.js # Messages management
 │   ├── components/        # React components
+│   │   ├── Layout.js      # Main layout
+│   │   └── AdminLayout.js # Admin layout
+│   ├── utils/             # Utility functions
+│   │   └── api.js         # API functions
 │   ├── styles/            # Global styles
 │   ├── public/            # Static assets
 │   ├── next.config.js     # Next.js configuration
@@ -58,6 +78,39 @@ npm start
 
 4. **Access the application**
 Open your browser and navigate to `http://localhost:5000`
+
+## 🔐 Admin Dashboard
+
+The portfolio includes a complete admin dashboard for content management.
+
+### Access Admin Dashboard
+
+1. Navigate to `/admin/login`
+2. Use the demo credentials:
+   - **Username**: `admin`
+   - **Password**: `password`
+
+### Admin Features
+
+- **Dashboard Overview**: Statistics and quick actions
+- **Profile Management**: Update personal information and profile image
+- **Projects Management**: Add, edit, delete, and feature projects
+- **Skills Management**: Manage skills and technologies
+- **Messages**: View contact form submissions (logged to console)
+
+### Admin API Endpoints
+
+- `POST /api/admin/login` - Admin authentication
+- `GET /api/admin/verify` - Verify JWT token
+- `GET /api/admin/portfolio` - Get all portfolio data
+- `PUT /api/admin/portfolio/profile` - Update profile
+- `POST /api/admin/portfolio/profile/image` - Upload profile image
+- `GET /api/admin/portfolio/projects` - Get all projects
+- `POST /api/admin/portfolio/projects` - Add new project
+- `PUT /api/admin/portfolio/projects/:id` - Update project
+- `DELETE /api/admin/portfolio/projects/:id` - Delete project
+- `PUT /api/admin/portfolio/skills` - Update skills
+- `GET /api/admin/messages` - Get contact messages
 
 ## 🌐 Deploying to Render
 

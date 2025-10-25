@@ -1,0 +1,247 @@
+const express = require('express');
+const jwt = require('jsonwebtoken');
+const bcrypt = require('bcryptjs');
+const multer = require('multer');
+const path = require('path');
+const fs = require('fs');
+const { users, JWT_SECRET, authenticateToken, requireAdmin } = require('../middleware/auth');
+
+const router = express.Router();
+
+// Configure multer for file uploads
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    const uploadPath = path.join(__dirname, '../uploads');
+    if (!fs.existsSync(uploadPath)) {
+      fs.mkdirSync(uploadPath, { recursive: true });
+    }
+    cb(null, uploadPath);
+  },
+  filename: (req, file, cb) => {
+    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+    cb(null, file.fieldname + '-' + uniqueSuffix + path.extname(file.originalname));
+  }
+});
+
+const upload = multer({ 
+  storage: storage,
+  limits: { fileSize: 5 * 1024 * 1024 }, // 5MB limit
+  fileFilter: (req, file, cb) => {
+    const allowedTypes = /jpeg|jpg|png|gif|webp/;
+    const extname = allowedTypes.test(path.extname(file.originalname).toLowerCase());
+    const mimetype = allowedTypes.test(file.mimetype);
+    
+    if (mimetype && extname) {
+      return cb(null, true);
+    } else {
+      cb(new Error('Only image files are allowed'));
+    }
+  }
+});
+
+// In-memory data storage (in production, use a database)
+let portfolioData = {
+  profile: {
+    name: 'John Doe',
+    title: 'Full-Stack Developer & UI/UX Designer',
+    bio: 'Passionate about creating beautiful, functional, and user-centered digital experiences. I specialize in modern web technologies and love turning complex problems into simple, elegant solutions.',
+    email: 'john@example.com',
+    github: 'https://github.com',
+    linkedin: 'https://linkedin.com',
+    profileImage: '/profile.jpg'
+  },
+  projects: [
+    {
+      id: 1,
+      title: 'E-Commerce Platform',
+      description: 'A full-stack e-commerce solution built with Next.js, Node.js, and MongoDB. Features include user authentication, payment processing, and admin dashboard.',
+      technologies: ['Next.js', 'Node.js', 'MongoDB', 'Stripe'],
+      github: 'https://github.com',
+      demo: 'https://demo.com',
+      featured: true,
+      image: '/project1.jpg'
+    },
+    {
+      id: 2,
+      title: 'Task Management App',
+      description: 'A collaborative task management application with real-time updates, drag-and-drop functionality, and team collaboration features.',
+      technologies: ['React', 'Express', 'Socket.io', 'PostgreSQL'],
+      github: 'https://github.com',
+      demo: 'https://demo.com',
+      featured: true,
+      image: '/project2.jpg'
+    }
+  ],
+  skills: [
+    'React/Next.js',
+    'Node.js/Express',
+    'TypeScript',
+    'Tailwind CSS',
+    'MongoDB',
+    'PostgreSQL',
+    'AWS',
+    'Docker'
+  ]
+};
+
+// Admin login
+router.post('/login', async (req, res) => {
+  try {
+    const { username, password } = req.body;
+    
+    const user = users.find(u => u.username === username);
+    if (!user) {
+      return res.status(401).json({ error: 'Invalid credentials' });
+    }
+    
+    const isValidPassword = await bcrypt.compare(password, user.password);
+    if (!isValidPassword) {
+      return res.status(401).json({ error: 'Invalid credentials' });
+    }
+    
+    const token = jwt.sign(
+      { id: user.id, username: user.username, role: user.role },
+      JWT_SECRET,
+      { expiresIn: '24h' }
+    );
+    
+    res.json({
+      success: true,
+      token,
+      user: { id: user.id, username: user.username, role: user.role }
+    });
+  } catch (error) {
+    console.error('Login error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// Get all portfolio data
+router.get('/portfolio', authenticateToken, requireAdmin, (req, res) => {
+  res.json(portfolioData);
+});
+
+// Update profile
+router.put('/portfolio/profile', authenticateToken, requireAdmin, (req, res) => {
+  try {
+    portfolioData.profile = { ...portfolioData.profile, ...req.body };
+    res.json({ success: true, data: portfolioData.profile });
+  } catch (error) {
+    console.error('Update profile error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// Upload profile image
+router.post('/portfolio/profile/image', authenticateToken, requireAdmin, upload.single('image'), (req, res) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({ error: 'No image file provided' });
+    }
+    
+    const imageUrl = `/uploads/${req.file.filename}`;
+    portfolioData.profile.profileImage = imageUrl;
+    
+    res.json({ success: true, imageUrl });
+  } catch (error) {
+    console.error('Upload error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// Get all projects
+router.get('/portfolio/projects', authenticateToken, requireAdmin, (req, res) => {
+  res.json(portfolioData.projects);
+});
+
+// Add new project
+router.post('/portfolio/projects', authenticateToken, requireAdmin, upload.single('image'), (req, res) => {
+  try {
+    const projectData = req.body;
+    const newProject = {
+      id: Date.now(),
+      ...projectData,
+      technologies: projectData.technologies ? projectData.technologies.split(',').map(t => t.trim()) : [],
+      featured: projectData.featured === 'true',
+      image: req.file ? `/uploads/${req.file.filename}` : '/project-default.jpg'
+    };
+    
+    portfolioData.projects.push(newProject);
+    res.json({ success: true, project: newProject });
+  } catch (error) {
+    console.error('Add project error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// Update project
+router.put('/portfolio/projects/:id', authenticateToken, requireAdmin, upload.single('image'), (req, res) => {
+  try {
+    const projectId = parseInt(req.params.id);
+    const projectIndex = portfolioData.projects.findIndex(p => p.id === projectId);
+    
+    if (projectIndex === -1) {
+      return res.status(404).json({ error: 'Project not found' });
+    }
+    
+    const updateData = req.body;
+    if (updateData.technologies) {
+      updateData.technologies = updateData.technologies.split(',').map(t => t.trim());
+    }
+    if (updateData.featured) {
+      updateData.featured = updateData.featured === 'true';
+    }
+    if (req.file) {
+      updateData.image = `/uploads/${req.file.filename}`;
+    }
+    
+    portfolioData.projects[projectIndex] = { ...portfolioData.projects[projectIndex], ...updateData };
+    res.json({ success: true, project: portfolioData.projects[projectIndex] });
+  } catch (error) {
+    console.error('Update project error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// Delete project
+router.delete('/portfolio/projects/:id', authenticateToken, requireAdmin, (req, res) => {
+  try {
+    const projectId = parseInt(req.params.id);
+    const projectIndex = portfolioData.projects.findIndex(p => p.id === projectId);
+    
+    if (projectIndex === -1) {
+      return res.status(404).json({ error: 'Project not found' });
+    }
+    
+    portfolioData.projects.splice(projectIndex, 1);
+    res.json({ success: true });
+  } catch (error) {
+    console.error('Delete project error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// Update skills
+router.put('/portfolio/skills', authenticateToken, requireAdmin, (req, res) => {
+  try {
+    const { skills } = req.body;
+    portfolioData.skills = skills;
+    res.json({ success: true, skills: portfolioData.skills });
+  } catch (error) {
+    console.error('Update skills error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// Get contact messages
+router.get('/messages', authenticateToken, requireAdmin, (req, res) => {
+  // In production, this would fetch from a database
+  res.json({ messages: [] });
+});
+
+// Verify token
+router.get('/verify', authenticateToken, (req, res) => {
+  res.json({ valid: true, user: req.user });
+});
+
+module.exports = router;
