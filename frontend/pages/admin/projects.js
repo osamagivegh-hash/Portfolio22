@@ -226,7 +226,7 @@ export default function AdminProjects() {
               <div key={project.id} className="card">
                 <div className="mb-4">
                   <img
-                    src={project.image || '/project-default.jpg'}
+                    src={project.image ? (project.image.startsWith('http') ? project.image : `${window.location.origin}${project.image}`) : '/project-default.jpg'}
                     alt={project.title}
                     className="w-full h-48 object-cover rounded-lg"
                     onError={(e) => {

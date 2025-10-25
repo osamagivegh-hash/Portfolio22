@@ -130,7 +130,7 @@ export default function Projects() {
                 <div key={project.id} className="card group hover:shadow-xl transition-shadow duration-300">
                   <div className="mb-4">
                     <img
-                      src={project.image}
+                      src={project.image.startsWith('http') ? project.image : `${window.location.origin}${project.image}`}
                       alt={project.title}
                       className="w-full h-48 object-cover rounded-lg"
                       onError={(e) => {
@@ -192,7 +192,7 @@ export default function Projects() {
                 <div key={project.id} className="card group hover:shadow-xl transition-shadow duration-300">
                   <div className="mb-4">
                     <img
-                      src={project.image}
+                      src={project.image.startsWith('http') ? project.image : `${window.location.origin}${project.image}`}
                       alt={project.title}
                       className="w-full h-40 object-cover rounded-lg"
                       onError={(e) => {

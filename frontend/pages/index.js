@@ -50,7 +50,7 @@ export default function Home() {
           <div className="text-center mb-16">
             <div className="mb-8">
               <img
-                src="/profile.jpg"
+                src={profile?.profileImage ? (profile.profileImage.startsWith('http') ? profile.profileImage : `${window.location.origin}${profile.profileImage}`) : '/profile.jpg'}
                 alt="Profile"
                 className="w-32 h-32 rounded-full mx-auto mb-6 object-cover border-4 border-white shadow-lg"
                 onError={(e) => {
