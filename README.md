@@ -61,7 +61,6 @@ npm install
 4. **Build the frontend**
 ```bash
 npm run build
-npm run export
 ```
 
 5. **Start the backend server**
