@@ -100,12 +100,12 @@ Fill in the following settings:
 **Build & Deploy Settings:**
 - **Build Command**:
 ```bash
-npm install && cd frontend && npm install && npm run build && npm run export
+npm run build
 ```
 
 - **Start Command**:
 ```bash
-cd backend && node server.js
+npm start
 ```
 
 **Environment Variables:**

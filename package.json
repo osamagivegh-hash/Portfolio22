@@ -4,7 +4,7 @@
   "description": "Full-stack personal portfolio website with Next.js and Express.js",
   "scripts": {
     "install-all": "cd backend && npm install && cd ../frontend && npm install",
-    "build": "cd frontend && npm run build && npm run export",
+    "build": "cd frontend && npm install && npm run build && npm run export",
     "start": "cd backend && node server.js",
     "dev:frontend": "cd frontend && npm run dev",
     "dev:backend": "cd backend && npm run dev"
