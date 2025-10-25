@@ -82,7 +82,10 @@ app.get('/api/portfolio', async (req, res) => {
         linkedin: 'https://linkedin.com',
         profileImage: '/profile.jpg'
       },
-      projects: projects || [],
+      projects: projects ? projects.map(project => ({
+        ...project.toObject(),
+        id: project._id
+      })) : [],
       skills: skills.map(skill => skill.name) || []
     });
   } catch (error) {

@@ -208,7 +208,12 @@ router.post('/portfolio/profile/image', authenticateToken, requireAdmin, upload.
 router.get('/portfolio/projects', authenticateToken, requireAdmin, async (req, res) => {
   try {
     const projects = await Project.find().sort({ order: 1, createdAt: -1 });
-    res.json(projects);
+    // Transform MongoDB _id to id for frontend compatibility
+    const transformedProjects = projects.map(project => ({
+      ...project.toObject(),
+      id: project._id
+    }));
+    res.json(transformedProjects);
   } catch (error) {
     console.error('Error fetching projects:', error);
     res.status(500).json({ error: 'Internal server error' });
@@ -228,7 +233,12 @@ router.post('/portfolio/projects', authenticateToken, requireAdmin, upload.singl
     });
     
     await newProject.save();
-    res.json({ success: true, project: newProject });
+    // Transform MongoDB _id to id for frontend compatibility
+    const transformedProject = {
+      ...newProject.toObject(),
+      id: newProject._id
+    };
+    res.json({ success: true, project: transformedProject });
   } catch (error) {
     console.error('Add project error:', error);
     res.status(500).json({ error: 'Internal server error' });
@@ -259,7 +269,12 @@ router.put('/portfolio/projects/:id', authenticateToken, requireAdmin, upload.si
     Object.assign(project, updateData);
     await project.save();
     
-    res.json({ success: true, project });
+    // Transform MongoDB _id to id for frontend compatibility
+    const transformedProject = {
+      ...project.toObject(),
+      id: project._id
+    };
+    res.json({ success: true, project: transformedProject });
   } catch (error) {
     console.error('Update project error:', error);
     res.status(500).json({ error: 'Internal server error' });
