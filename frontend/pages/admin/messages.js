@@ -14,7 +14,9 @@ export default function AdminMessages() {
   const fetchMessages = async () => {
     try {
       const token = localStorage.getItem('adminToken')
-      const response = await fetch(`${(process.env.NEXT_PUBLIC_API_URL || '')}/api/admin/messages`, {
+      const response = await fetch(process.env.NEXT_PUBLIC_API_URL 
+        ? `${process.env.NEXT_PUBLIC_API_URL}/api/admin/messages`
+        : '/api/admin/messages', {
         headers: {
           'Authorization': `Bearer ${token}`
         }

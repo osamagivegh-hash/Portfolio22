@@ -26,7 +26,9 @@ export default function AdminProjects() {
   const fetchProjects = async () => {
     try {
       const token = localStorage.getItem('adminToken')
-      const response = await fetch(`${(process.env.NEXT_PUBLIC_API_URL || '')}/api/admin/portfolio/projects`, {
+      const response = await fetch(process.env.NEXT_PUBLIC_API_URL 
+        ? `${process.env.NEXT_PUBLIC_API_URL}/api/admin/portfolio/projects`
+        : '/api/admin/portfolio/projects', {
         headers: {
           'Authorization': `Bearer ${token}`
         }
@@ -67,8 +69,12 @@ export default function AdminProjects() {
       })
 
       const url = editingProject 
-        ? `${(process.env.NEXT_PUBLIC_API_URL || '')}/api/admin/portfolio/projects/${editingProject.id}`
-        : `${(process.env.NEXT_PUBLIC_API_URL || '')}/api/admin/portfolio/projects`
+        ? (process.env.NEXT_PUBLIC_API_URL 
+            ? `${process.env.NEXT_PUBLIC_API_URL}/api/admin/portfolio/projects/${editingProject.id}`
+            : `/api/admin/portfolio/projects/${editingProject.id}`)
+        : (process.env.NEXT_PUBLIC_API_URL 
+            ? `${process.env.NEXT_PUBLIC_API_URL}/api/admin/portfolio/projects`
+            : '/api/admin/portfolio/projects')
 
       const response = await fetch(url, {
         method: editingProject ? 'PUT' : 'POST',
@@ -118,7 +124,11 @@ export default function AdminProjects() {
 
     try {
       const token = localStorage.getItem('adminToken')
-      const response = await fetch(`${(process.env.NEXT_PUBLIC_API_URL || '')}/api/admin/portfolio/projects/${projectId}`, {
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL 
+        ? `${process.env.NEXT_PUBLIC_API_URL}/api/admin/portfolio/projects/${projectId}`
+        : `/api/admin/portfolio/projects/${projectId}`
+      
+      const response = await fetch(apiUrl, {
         method: 'DELETE',
         headers: {
           'Authorization': `Bearer ${token}`

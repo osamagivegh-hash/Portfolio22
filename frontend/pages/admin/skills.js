@@ -17,7 +17,9 @@ export default function AdminSkills() {
   const fetchSkills = async () => {
     try {
       const token = localStorage.getItem('adminToken')
-      const response = await fetch(`${(process.env.NEXT_PUBLIC_API_URL || '')}/api/admin/portfolio`, {
+      const response = await fetch(process.env.NEXT_PUBLIC_API_URL 
+        ? `${process.env.NEXT_PUBLIC_API_URL}/api/admin/portfolio`
+        : '/api/admin/portfolio', {
         headers: {
           'Authorization': `Bearer ${token}`
         }
@@ -54,7 +56,11 @@ export default function AdminSkills() {
 
     try {
       const token = localStorage.getItem('adminToken')
-      const response = await fetch(`${(process.env.NEXT_PUBLIC_API_URL || '')}/api/admin/portfolio/skills`, {
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL 
+        ? `${process.env.NEXT_PUBLIC_API_URL}/api/admin/portfolio/skills`
+        : '/api/admin/portfolio/skills'
+      
+      const response = await fetch(apiUrl, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
