@@ -46,30 +46,17 @@ git clone <your-repo-url>
 cd Portfolio22
 ```
 
-2. **Install backend dependencies**
-```bash
-cd backend
-npm install
-```
-
-3. **Install frontend dependencies**
-```bash
-cd ../frontend
-npm install
-```
-
-4. **Build the frontend**
+2. **Install all dependencies and build**
 ```bash
 npm run build
 ```
 
-5. **Start the backend server**
+3. **Start the backend server**
 ```bash
-cd ../backend
 npm start
 ```
 
-6. **Access the application**
+4. **Access the application**
 Open your browser and navigate to `http://localhost:5000`
 
 ## 🌐 Deploying to Render
