@@ -58,6 +58,39 @@ app.get('/api/health', (req, res) => {
   });
 });
 
+// Public portfolio data endpoint (no auth required)
+app.get('/api/portfolio', async (req, res) => {
+  try {
+    // Import MongoDB models
+    const Profile = require('./models/Profile');
+    const Project = require('./models/Project');
+    const Skill = require('./models/Skill');
+
+    const [profile, projects, skills] = await Promise.all([
+      Profile.findOne().sort({ createdAt: -1 }),
+      Project.find().sort({ order: 1, createdAt: -1 }),
+      Skill.find().sort({ order: 1, createdAt: -1 })
+    ]);
+
+    res.json({
+      profile: profile || {
+        name: 'John Doe',
+        title: 'Full-Stack Developer & UI/UX Designer',
+        bio: 'Passionate about creating beautiful, functional, and user-centered digital experiences.',
+        email: 'john@example.com',
+        github: 'https://github.com',
+        linkedin: 'https://linkedin.com',
+        profileImage: '/profile.jpg'
+      },
+      projects: projects || [],
+      skills: skills.map(skill => skill.name) || []
+    });
+  } catch (error) {
+    console.error('Error fetching public portfolio data:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
 // Admin routes
 app.use('/api/admin', adminRoutes);
 

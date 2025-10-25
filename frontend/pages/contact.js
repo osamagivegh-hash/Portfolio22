@@ -24,7 +24,12 @@ export default function Contact() {
     setSubmitStatus(null)
 
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/contact`, {
+      // Use relative URL in production, absolute in development
+      const apiUrl = process.env.NODE_ENV === 'production' 
+        ? '/api/contact' 
+        : `${process.env.NEXT_PUBLIC_API_URL}/api/contact`
+      
+      const response = await fetch(apiUrl, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

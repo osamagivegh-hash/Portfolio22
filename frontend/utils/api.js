@@ -1,11 +1,14 @@
 // API utility functions for fetching portfolio data
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'
+// Use relative URLs in production, absolute URLs in development
+const API_BASE_URL = process.env.NODE_ENV === 'production' 
+  ? '' // Use relative URLs in production (same domain)
+  : (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000')
 
 // Fetch portfolio data (public endpoint - no auth required)
 export const fetchPortfolioData = async () => {
   try {
-    const response = await fetch(`${API_BASE_URL}/api/admin/portfolio`)
+    const response = await fetch(`${API_BASE_URL}/api/portfolio`)
     if (response.ok) {
       const data = await response.json()
       // Transform MongoDB data to match frontend expectations
