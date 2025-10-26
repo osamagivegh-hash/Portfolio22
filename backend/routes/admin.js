@@ -366,3 +366,5 @@ router.post('/visualization/save', authenticateToken, requireAdmin, upload.singl
     res.status(500).json({ error: 'Internal server error' });
   }
 });
+
+module.exports = router;
