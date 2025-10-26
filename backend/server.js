@@ -36,6 +36,9 @@ app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 // Serve uploaded files
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
+// Serve frontend public files (for reports and other static assets)
+app.use(express.static(path.join(__dirname, '../frontend/public')));
+
 // API Routes
 app.get('/api/test', (req, res) => {
   res.json({ message: "Backend is working correctly" });
