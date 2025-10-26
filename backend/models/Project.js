@@ -30,6 +30,10 @@ const projectSchema = new mongoose.Schema({
     type: String,
     default: '/project-default.jpg'
   },
+  cloudinaryPublicId: {
+    type: String,
+    default: null
+  },
   order: {
     type: Number,
     default: 0

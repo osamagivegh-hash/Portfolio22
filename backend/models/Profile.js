@@ -32,6 +32,10 @@ const profileSchema = new mongoose.Schema({
   profileImage: {
     type: String,
     default: '/profile.jpg'
+  },
+  cloudinaryPublicId: {
+    type: String,
+    default: null
   }
 }, {
   timestamps: true
