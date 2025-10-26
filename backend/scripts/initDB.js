@@ -80,7 +80,12 @@ const initializeDatabase = async () => {
 
     // Create default projects
     const existingProjects = await Project.find();
-    if (existingProjects.length === 0) {
+    
+    // Check if we need to add the new HTML report projects
+    const hasDataAnalyticsProject = existingProjects.some(p => p.title === 'Data Analytics Dashboard');
+    const hasInsuranceProject = existingProjects.some(p => p.title === 'Insurance Analytics Report');
+    
+    if (existingProjects.length === 0 || (!hasDataAnalyticsProject || !hasInsuranceProject)) {
       const defaultProjects = [
         {
           title: 'Data Analytics Dashboard',
@@ -124,12 +129,22 @@ const initializeDatabase = async () => {
         }
       ];
 
-      const projectPromises = defaultProjects.map(projectData => 
-        new Project(projectData).save()
-      );
-      
-      await Promise.all(projectPromises);
-      console.log('✅ Default projects created');
+      // Only add projects that don't already exist
+      const projectsToAdd = defaultProjects.filter(projectData => {
+        if (existingProjects.length === 0) return true; // Add all if no projects exist
+        return !existingProjects.some(existing => existing.title === projectData.title);
+      });
+
+      if (projectsToAdd.length > 0) {
+        const projectPromises = projectsToAdd.map(projectData => 
+          new Project(projectData).save()
+        );
+        
+        await Promise.all(projectPromises);
+        console.log(`✅ Added ${projectsToAdd.length} new projects`);
+      } else {
+        console.log('ℹ️  All projects already exist');
+      }
     } else {
       console.log('ℹ️  Projects already exist');
     }
