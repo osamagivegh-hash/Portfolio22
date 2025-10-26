@@ -323,4 +323,46 @@ router.get('/verify', authenticateToken, (req, res) => {
   res.json({ valid: true, user: req.user });
 });
 
-module.exports = router;
+// Save visualization endpoint
+router.post('/visualization/save', authenticateToken, requireAdmin, upload.single('image'), async (req, res) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({ error: 'No image file provided' });
+    }
+
+    const { visualizationId, reportType } = req.body;
+    
+    if (!visualizationId || !reportType) {
+      return res.status(400).json({ error: 'Missing visualizationId or reportType' });
+    }
+
+    // Generate unique filename for the visualization
+    const fileExtension = path.extname(req.file.originalname);
+    const filename = `${reportType}_${visualizationId}_${Date.now()}${fileExtension}`;
+    
+    // Move file to reports directory
+    const reportsDir = path.join(__dirname, '../../frontend/public/reports');
+    const finalPath = path.join(reportsDir, filename);
+    
+    // Ensure reports directory exists
+    if (!fs.existsSync(reportsDir)) {
+      fs.mkdirSync(reportsDir, { recursive: true });
+    }
+    
+    // Move file from temp location to final location
+    fs.renameSync(req.file.path, finalPath);
+    
+    // Return the public URL
+    const imageUrl = `/reports/${filename}`;
+    
+    res.json({ 
+      success: true, 
+      imageUrl: imageUrl,
+      message: 'Visualization saved successfully' 
+    });
+    
+  } catch (error) {
+    console.error('Error saving visualization:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
