@@ -1,0 +1,80 @@
+
+            <!DOCTYPE html>
+            <html lang="en">
+            <head>
+                <meta charset="UTF-8">
+                <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                <title>Insurance Analytics Report</title>
+                <style>
+                    body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 0; padding: 20px; background-color: #f5f7fa; }
+                    .container { max-width: 1200px; margin: 0 auto; background-color: white; padding: 30px; border-radius: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+                    h1 { color: #2c3e50; text-align: center; border-bottom: 3px solid #3498db; padding-bottom: 20px; margin-bottom: 30px; }
+                    h2 { color: #34495e; border-left: 4px solid #3498db; padding-left: 15px; margin-top: 30px; }
+                    .summary { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 25px; border-radius: 10px; margin: 20px 0; }
+                    .metric { display: inline-block; margin: 15px 25px; text-align: center; }
+                    .metric-value { font-size: 28px; font-weight: bold; margin-bottom: 5px; }
+                    .metric-label { font-size: 14px; opacity: 0.9; }
+                    .info-box { background-color: #ecf0f1; padding: 20px; border-radius: 8px; margin: 15px 0; border-left: 4px solid #3498db; }
+                    .warning-box { background-color: #fdf2e9; padding: 20px; border-radius: 8px; margin: 15px 0; border-left: 4px solid #e67e22; }
+                    .success-box { background-color: #eafaf1; padding: 20px; border-radius: 8px; margin: 15px 0; border-left: 4px solid #27ae60; }
+                    table { width: 100%; border-collapse: collapse; margin: 20px 0; background-color: white; }
+                    th, td { border: 1px solid #bdc3c7; padding: 12px; text-align: left; }
+                    th { background: linear-gradient(135deg, #3498db, #2980b9); color: white; font-weight: bold; }
+                    tr:nth-child(even) { background-color: #f8f9fa; }
+                    tr:hover { background-color: #e3f2fd; }
+                    .chart-container { margin: 30px 0; text-align: center; }
+                    .chart-container img { max-width: 100%; height: auto; border: 1px solid #ddd; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+                    .footer { text-align: center; margin-top: 40px; color: #7f8c8d; font-size: 12px; }
+                    .insight { background-color: #fff3cd; border: 1px solid #ffeaa7; padding: 15px; border-radius: 5px; margin: 10px 0; }
+                    .insight-title { font-weight: bold; color: #856404; margin-bottom: 10px; }
+                </style>
+            </head>
+            <body>
+                <div class="container">
+                    <h1>🏥 Insurance Analytics Report</h1>
+                    <p style="text-align: center; color: #7f8c8d; font-size: 16px;">Generated on 2025-09-26 18:37:18</p>
+                    
+                    <div class="summary">
+                        <h2 style="color: white; border: none; padding: 0; margin: 0 0 20px 0;">📊 Executive Summary</h2>
+                        <div class="metric">
+                            <div class="metric-value">1,338</div>
+                            <div class="metric-label">Total Records</div>
+                        </div>
+                        <div class="metric">
+                            <div class="metric-value">7</div>
+                            <div class="metric-label">Columns</div>
+                        </div>
+                        <div class="metric">
+                            <div class="metric-value">4</div>
+                            <div class="metric-label">Numeric Columns</div>
+                        </div>
+                        <div class="metric">
+                            <div class="metric-value">3</div>
+                            <div class="metric-label">Categorical Columns</div>
+                        </div>
+                    </div>
+                    
+                    <h2>🔍 Data Quality Assessment</h2>
+                    <div class="success-box"><h3>✅ No Missing Values Found</h3><p>All columns have complete data.</p></div><div class="warning-box"><h3>⚠️ Duplicate Records Found</h3><p>Total duplicates: 1 (0.1%)</p></div>
+                    
+                    <h2>📋 Dataset Overview</h2>
+                    <div class="info-box"><h3>📊 Dataset Structure</h3><p><strong>Shape:</strong> 1,338 rows × 7 columns</p><p><strong>Memory Usage:</strong> 0.25 MB</p><h4>Column Types:</h4><p>• Numeric columns: 4</p><p>• Categorical columns: 3</p><p>• Datetime columns: 0</p></div>
+                    
+                    <h2>📈 Summary Statistics</h2>
+                    
+                    
+                    <h2>🔗 Key Insights</h2>
+                    <div class="info-box"><h3>🔍 Key Findings</h3><div class="insight"><div class="insight-title">💡</div><p>⚠️ 1 duplicate records found</p></div><div class="insight"><div class="insight-title">💡</div><p>📊 Dataset contains 4 numeric and 3 categorical columns</p></div><div class="insight"><div class="insight-title">💡</div><p>📈 148 outliers detected across numeric variables</p></div></div>
+                    
+                    <h2>📊 Visualizations</h2>
+                    <div class="chart-container"><h3>📊 Generated Visualizations</h3><h4>📈 Static Charts (PNG)</h4><div class="chart-container"><h5>1 Distribution Histograms</h5><img src="visualizations/1_distribution_histograms.png" alt="1_distribution_histograms.png"></div><div class="chart-container"><h5>2 Box Plots</h5><img src="visualizations/2_box_plots.png" alt="2_box_plots.png"></div><div class="chart-container"><h5>3 Correlation Heatmap</h5><img src="visualizations/3_correlation_heatmap.png" alt="3_correlation_heatmap.png"></div><div class="chart-container"><h5>4 Categorical Bar Charts</h5><img src="visualizations/4_categorical_bar_charts.png" alt="4_categorical_bar_charts.png"></div><div class="chart-container"><h5>5 Scatter Plots</h5><img src="visualizations/5_scatter_plots.png" alt="5_scatter_plots.png"></div><div class="chart-container"><h5>6 Pie Charts</h5><img src="visualizations/6_pie_charts.png" alt="6_pie_charts.png"></div><div class="chart-container"><h5>8 Violin Plots</h5><img src="visualizations/8_violin_plots.png" alt="8_violin_plots.png"></div><div class="chart-container"><h5>9 Pair Plots</h5><img src="visualizations/9_pair_plots.png" alt="9_pair_plots.png"></div><div class="chart-container"><h5>10 Heatmap Analysis</h5><img src="visualizations/10_heatmap_analysis.png" alt="10_heatmap_analysis.png"></div><div class="chart-container"><h5>12 Advanced Analytics</h5><img src="visualizations/12_advanced_analytics.png" alt="12_advanced_analytics.png"></div></div>
+                    
+                    <div class="footer">
+                        <p>📊 Report generated by Insurance Analytics Project</p>
+                        <p>🔧 For technical support or questions, please contact the analytics team.</p>
+                        <p>📅 Analysis completed on 2025-09-26 at 18:37:18</p>
+                    </div>
+                </div>
+            </body>
+            </html>
+            

@@ -100,6 +100,19 @@ export default function Projects() {
   const featuredProjects = projects.filter(project => project.featured)
   const otherProjects = projects.filter(project => !project.featured)
 
+  // Helper function to check if a project is an HTML report
+  const isHtmlReport = (project) => {
+    return project.demo && project.demo.endsWith('.html')
+  }
+
+  // Helper function to get report preview image
+  const getReportPreview = (project) => {
+    if (isHtmlReport(project)) {
+      return 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAwIiBoZWlnaHQ9IjE5MiIgdmlld0JveD0iMCAwIDQwMCAxOTIiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSI0MDAiIGhlaWdodD0iMTkyIiBmaWxsPSIjRjNGNEY2Ii8+CjxyZWN0IHg9IjUwIiB5PSI0MCIgd2lkdGg9IjMwMCIgaGVpZ2h0PSIxMTIiIGZpbGw9IiM2NjdlZWEiLz4KPHN2ZyB4PSIxNzUiIHk9Ijc2IiB3aWR0aD0iNTAiIGhlaWdodD0iNDAiIHZpZXdCb3g9IjAgMCA1MCA0MCIgZmlsbD0ibm9uZSI+CjxwYXRoIGQ9Ik0yNSAyMEMxMS4xOTIgMjAgMCAyOS4xOTIgMCA0MHMxMS4xOTIgMjAgMjUgMjAgMjUtOS4xOTIgMjUtMjBTMzguODA4IDIwIDI1IDIwWk0yNSAzMEMyMS42ODYgMzAgMTkgMzIuNjg2IDE5IDM2czIuNjg2IDYgNiA2IDYtMi42ODYgNi02LTIuNjg2LTYtNi02WiIgZmlsbD0iI2ZmZiIvPgo8L3N2Zz4KPC9zdmc+'
+    }
+    return project.image.startsWith('http') ? project.image : `${window.location.origin}${project.image}`
+  }
+
   return (
     <>
       <Head>
@@ -127,16 +140,21 @@ export default function Projects() {
             
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
               {featuredProjects.map((project) => (
-                <div key={project.id} className="card group hover:shadow-xl transition-shadow duration-300">
-                  <div className="mb-4">
+                <div key={project.id} className={`card group hover:shadow-xl transition-shadow duration-300 ${isHtmlReport(project) ? 'border-l-4 border-blue-500' : ''}`}>
+                  <div className="mb-4 relative">
                     <img
-                      src={project.image.startsWith('http') ? project.image : `${window.location.origin}${project.image}`}
+                      src={getReportPreview(project)}
                       alt={project.title}
                       className="w-full h-48 object-cover rounded-lg"
                       onError={(e) => {
                         e.target.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAwIiBoZWlnaHQ9IjE5MiIgdmlld0JveD0iMCAwIDQwMCAxOTIiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSI0MDAiIGhlaWdodD0iMTkyIiBmaWxsPSIjRjNGNEY2Ii8+CjxyZWN0IHg9IjUwIiB5PSI0MCIgd2lkdGg9IjMwMCIgaGVpZ2h0PSIxMTIiIGZpbGw9IiNEOUQ5REQiLz4KPHN2ZyB4PSIxNzUiIHk9Ijc2IiB3aWR0aD0iNTAiIGhlaWdodD0iNDAiIHZpZXdCb3g9IjAgMCA1MCA0MCIgZmlsbD0ibm9uZSI+CjxwYXRoIGQ9Ik0yNSAyMEMxMS4xOTIgMjAgMCAyOS4xOTIgMCA0MHMxMS4xOTIgMjAgMjUgMjAgMjUtOS4xOTIgMjUtMjBTMzguODA4IDIwIDI1IDIwWk0yNSAzMEMyMS42ODYgMzAgMTkgMzIuNjg2IDE5IDM2czIuNjg2IDYgNiA2IDYtMi42ODYgNi02LTIuNjg2LTYtNi02WiIgZmlsbD0iIzlDQTNBRiIvPgo8L3N2Zz4KPC9zdmc+'
                       }}
                     />
+                    {isHtmlReport(project) && (
+                      <div className="absolute top-2 right-2 bg-blue-500 text-white px-2 py-1 rounded-full text-xs font-medium">
+                        📊 Report
+                      </div>
+                    )}
                   </div>
                   
                   <h3 className="text-xl font-bold text-gray-900 mb-2 group-hover:text-primary-600 transition-colors duration-200">
@@ -173,7 +191,7 @@ export default function Projects() {
                       rel="noopener noreferrer"
                       className="btn-primary text-sm"
                     >
-                      Live Demo
+                      {isHtmlReport(project) ? 'View Report' : 'Live Demo'}
                     </a>
                   </div>
                 </div>
@@ -189,16 +207,21 @@ export default function Projects() {
             
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {otherProjects.map((project) => (
-                <div key={project.id} className="card group hover:shadow-xl transition-shadow duration-300">
-                  <div className="mb-4">
+                <div key={project.id} className={`card group hover:shadow-xl transition-shadow duration-300 ${isHtmlReport(project) ? 'border-l-4 border-blue-500' : ''}`}>
+                  <div className="mb-4 relative">
                     <img
-                      src={project.image.startsWith('http') ? project.image : `${window.location.origin}${project.image}`}
+                      src={getReportPreview(project)}
                       alt={project.title}
                       className="w-full h-40 object-cover rounded-lg"
                       onError={(e) => {
                         e.target.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzAwIiBoZWlnaHQ9IjE2MCIgdmlld0JveD0iMCAwIDMwMCAxNjAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSIzMDAiIGhlaWdodD0iMTYwIiBmaWxsPSIjRjNGNEY2Ii8+CjxyZWN0IHg9IjMwIiB5PSIzMCIgd2lkdGg9IjI0MCIgaGVpZ2h0PSIxMDAiIGZpbGw9IiNEOUQ5REQiLz4KPHN2ZyB4PSIxMjUiIHk9IjYwIiB3aWR0aD0iNTAiIGhlaWdodD0iNDAiIHZpZXdCb3g9IjAgMCA1MCA0MCIgZmlsbD0ibm9uZSI+CjxwYXRoIGQ9Ik0yNSAyMEMxMS4xOTIgMjAgMCAyOS4xOTIgMCA0MHMxMS4xOTIgMjAgMjUgMjAgMjUtOS4xOTIgMjUtMjBTMzguODA4IDIwIDI1IDIwWk0yNSAzMEMyMS42ODYgMzAgMTkgMzIuNjg2IDE5IDM2czIuNjg2IDYgNiA2IDYtMi42ODYgNi02LTIuNjg2LTYtNi02WiIgZmlsbD0iIzlDQTNBRiIvPgo8L3N2Zz4KPC9zdmc+'
                       }}
                     />
+                    {isHtmlReport(project) && (
+                      <div className="absolute top-2 right-2 bg-blue-500 text-white px-2 py-1 rounded-full text-xs font-medium">
+                        📊 Report
+                      </div>
+                    )}
                   </div>
                   
                   <h3 className="text-lg font-bold text-gray-900 mb-2 group-hover:text-primary-600 transition-colors duration-200">
@@ -235,7 +258,7 @@ export default function Projects() {
                       rel="noopener noreferrer"
                       className="btn-primary text-xs flex-1 text-center"
                     >
-                      Demo
+                      {isHtmlReport(project) ? 'Report' : 'Demo'}
                     </a>
                   </div>
                 </div>

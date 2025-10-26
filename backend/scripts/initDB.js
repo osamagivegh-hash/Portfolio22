@@ -83,6 +83,26 @@ const initializeDatabase = async () => {
     if (existingProjects.length === 0) {
       const defaultProjects = [
         {
+          title: 'Data Analytics Dashboard',
+          description: 'Comprehensive data analytics report with interactive visualizations. Features include time series analysis, correlation heatmaps, customer segmentation, and interactive charts built with Python and Plotly.js.',
+          technologies: ['Python', 'Plotly.js', 'Pandas', 'Matplotlib', 'HTML/CSS'],
+          github: 'https://github.com',
+          demo: '/reports/data_analytics_report.html',
+          featured: true,
+          image: '/reports/data_analytics_report.html',
+          order: 0
+        },
+        {
+          title: 'Insurance Analytics Report',
+          description: 'Advanced insurance data analysis with statistical insights, risk assessment visualizations, and comprehensive reporting. Includes interactive charts and detailed statistical summaries.',
+          technologies: ['Python', 'Plotly.js', 'Statistical Analysis', 'Data Visualization', 'HTML/CSS'],
+          github: 'https://github.com',
+          demo: '/reports/insurance_analytics_report.html',
+          featured: true,
+          image: '/reports/insurance_analytics_report.html',
+          order: 1
+        },
+        {
           title: 'E-Commerce Platform',
           description: 'A full-stack e-commerce solution built with Next.js, Node.js, and MongoDB. Features include user authentication, payment processing, and admin dashboard.',
           technologies: ['Next.js', 'Node.js', 'MongoDB', 'Stripe'],
@@ -90,7 +110,7 @@ const initializeDatabase = async () => {
           demo: 'https://demo.com',
           featured: true,
           image: '/project1.jpg',
-          order: 0
+          order: 2
         },
         {
           title: 'Task Management App',
@@ -100,7 +120,7 @@ const initializeDatabase = async () => {
           demo: 'https://demo.com',
           featured: true,
           image: '/project2.jpg',
-          order: 1
+          order: 3
         }
       ];
 
