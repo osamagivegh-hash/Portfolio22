@@ -131,57 +131,105 @@ Standard             20803.04  145.48   143  66.73</div><div class="insight-item
                 <h2>📊 Static Visualizations</h2>
                 <div class="image-container">
                     <h3>Time Series Analysis</h3>
-                    <div style="width: 800px; height: 400px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 10px; display: flex; align-items: center; justify-content: center; color: white; font-size: 18px;">
-                        📈 Time Series Sales Chart
+                    <div class="visualization-wrapper" style="position: relative;">
+                        <div id="time-series-placeholder" style="width: 800px; height: 400px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 10px; display: flex; align-items: center; justify-content: center; color: white; font-size: 18px;">
+                            📈 Time Series Sales Chart
+                        </div>
+                        <button onclick="editVisualization('time-series')" class="edit-btn" style="position: absolute; top: 10px; right: 10px; background: rgba(0,0,0,0.7); color: white; border: none; padding: 8px 12px; border-radius: 5px; cursor: pointer; font-size: 12px;">
+                            ✏️ Edit
+                        </button>
+                        <input type="file" id="time-series-input" accept="image/*" style="display: none;" onchange="uploadImage('time-series', this)">
                     </div>
                 </div>
                 
                 <div class="image-container">
                     <h3>Sales by Region and Product Category</h3>
-                    <div style="width: 800px; height: 400px; background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); border-radius: 10px; display: flex; align-items: center; justify-content: center; color: white; font-size: 18px;">
-                        📊 Grouped Bar Chart
+                    <div class="visualization-wrapper" style="position: relative;">
+                        <div id="grouped-bar-placeholder" style="width: 800px; height: 400px; background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); border-radius: 10px; display: flex; align-items: center; justify-content: center; color: white; font-size: 18px;">
+                            📊 Grouped Bar Chart
+                        </div>
+                        <button onclick="editVisualization('grouped-bar')" class="edit-btn" style="position: absolute; top: 10px; right: 10px; background: rgba(0,0,0,0.7); color: white; border: none; padding: 8px 12px; border-radius: 5px; cursor: pointer; font-size: 12px;">
+                            ✏️ Edit
+                        </button>
+                        <input type="file" id="grouped-bar-input" accept="image/*" style="display: none;" onchange="uploadImage('grouped-bar', this)">
                     </div>
                 </div>
                 
                 <div class="image-container">
                     <h3>Distribution Analysis</h3>
-                    <div style="width: 800px; height: 400px; background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); border-radius: 10px; display: flex; align-items: center; justify-content: center; color: white; font-size: 18px;">
-                        📈 Distribution Charts
+                    <div class="visualization-wrapper" style="position: relative;">
+                        <div id="distribution-placeholder" style="width: 800px; height: 400px; background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); border-radius: 10px; display: flex; align-items: center; justify-content: center; color: white; font-size: 18px;">
+                            📈 Distribution Charts
+                        </div>
+                        <button onclick="editVisualization('distribution')" class="edit-btn" style="position: absolute; top: 10px; right: 10px; background: rgba(0,0,0,0.7); color: white; border: none; padding: 8px 12px; border-radius: 5px; cursor: pointer; font-size: 12px;">
+                            ✏️ Edit
+                        </button>
+                        <input type="file" id="distribution-input" accept="image/*" style="display: none;" onchange="uploadImage('distribution', this)">
                     </div>
                 </div>
                 
                 <div class="image-container">
                     <h3>Income vs Sales Correlation</h3>
-                    <div style="width: 800px; height: 400px; background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%); border-radius: 10px; display: flex; align-items: center; justify-content: center; color: white; font-size: 18px;">
-                        🔗 Scatter Plot
+                    <div class="visualization-wrapper" style="position: relative;">
+                        <div id="scatter-placeholder" style="width: 800px; height: 400px; background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%); border-radius: 10px; display: flex; align-items: center; justify-content: center; color: white; font-size: 18px;">
+                            🔗 Scatter Plot
+                        </div>
+                        <button onclick="editVisualization('scatter')" class="edit-btn" style="position: absolute; top: 10px; right: 10px; background: rgba(0,0,0,0.7); color: white; border: none; padding: 8px 12px; border-radius: 5px; cursor: pointer; font-size: 12px;">
+                            ✏️ Edit
+                        </button>
+                        <input type="file" id="scatter-input" accept="image/*" style="display: none;" onchange="uploadImage('scatter', this)">
                     </div>
                 </div>
                 
                 <div class="image-container">
                     <h3>Correlation Heatmap</h3>
-                    <div style="width: 800px; height: 400px; background: linear-gradient(135deg, #fa709a 0%, #fee140 100%); border-radius: 10px; display: flex; align-items: center; justify-content: center; color: white; font-size: 18px;">
-                        🔥 Correlation Heatmap
+                    <div class="visualization-wrapper" style="position: relative;">
+                        <div id="heatmap-placeholder" style="width: 800px; height: 400px; background: linear-gradient(135deg, #fa709a 0%, #fee140 100%); border-radius: 10px; display: flex; align-items: center; justify-content: center; color: white; font-size: 18px;">
+                            🔥 Correlation Heatmap
+                        </div>
+                        <button onclick="editVisualization('heatmap')" class="edit-btn" style="position: absolute; top: 10px; right: 10px; background: rgba(0,0,0,0.7); color: white; border: none; padding: 8px 12px; border-radius: 5px; cursor: pointer; font-size: 12px;">
+                            ✏️ Edit
+                        </button>
+                        <input type="file" id="heatmap-input" accept="image/*" style="display: none;" onchange="uploadImage('heatmap', this)">
                     </div>
                 </div>
                 
                 <div class="image-container">
                     <h3>Customer Segments by Region</h3>
-                    <div style="width: 800px; height: 400px; background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%); border-radius: 10px; display: flex; align-items: center; justify-content: center; color: white; font-size: 18px;">
-                        👥 Customer Segments
+                    <div class="visualization-wrapper" style="position: relative;">
+                        <div id="segments-placeholder" style="width: 800px; height: 400px; background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%); border-radius: 10px; display: flex; align-items: center; justify-content: center; color: white; font-size: 18px;">
+                            👥 Customer Segments
+                        </div>
+                        <button onclick="editVisualization('segments')" class="edit-btn" style="position: absolute; top: 10px; right: 10px; background: rgba(0,0,0,0.7); color: white; border: none; padding: 8px 12px; border-radius: 5px; cursor: pointer; font-size: 12px;">
+                            ✏️ Edit
+                        </button>
+                        <input type="file" id="segments-input" accept="image/*" style="display: none;" onchange="uploadImage('segments', this)">
                     </div>
                 </div>
                 
                 <div class="image-container">
                     <h3>Product Category Distribution</h3>
-                    <div style="width: 800px; height: 400px; background: linear-gradient(135deg, #ff9a9e 0%, #fecfef 100%); border-radius: 10px; display: flex; align-items: center; justify-content: center; color: white; font-size: 18px;">
-                        🥧 Pie Chart
+                    <div class="visualization-wrapper" style="position: relative;">
+                        <div id="pie-placeholder" style="width: 800px; height: 400px; background: linear-gradient(135deg, #ff9a9e 0%, #fecfef 100%); border-radius: 10px; display: flex; align-items: center; justify-content: center; color: white; font-size: 18px;">
+                            🥧 Pie Chart
+                        </div>
+                        <button onclick="editVisualization('pie')" class="edit-btn" style="position: absolute; top: 10px; right: 10px; background: rgba(0,0,0,0.7); color: white; border: none; padding: 8px 12px; border-radius: 5px; cursor: pointer; font-size: 12px;">
+                            ✏️ Edit
+                        </button>
+                        <input type="file" id="pie-input" accept="image/*" style="display: none;" onchange="uploadImage('pie', this)">
                     </div>
                 </div>
                 
                 <div class="image-container">
                     <h3>Sales vs Profit Over Time</h3>
-                    <div style="width: 800px; height: 400px; background: linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%); border-radius: 10px; display: flex; align-items: center; justify-content: center; color: white; font-size: 18px;">
-                        📊 Multi-Axis Chart
+                    <div class="visualization-wrapper" style="position: relative;">
+                        <div id="multi-axis-placeholder" style="width: 800px; height: 400px; background: linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%); border-radius: 10px; display: flex; align-items: center; justify-content: center; color: white; font-size: 18px;">
+                            📊 Multi-Axis Chart
+                        </div>
+                        <button onclick="editVisualization('multi-axis')" class="edit-btn" style="position: absolute; top: 10px; right: 10px; background: rgba(0,0,0,0.7); color: white; border: none; padding: 8px 12px; border-radius: 5px; cursor: pointer; font-size: 12px;">
+                            ✏️ Edit
+                        </button>
+                        <input type="file" id="multi-axis-input" accept="image/*" style="display: none;" onchange="uploadImage('multi-axis', this)">
                     </div>
                 </div>
                 
@@ -225,6 +273,118 @@ Standard             20803.04  145.48   143  66.73</div><div class="insight-item
                     <p>Data Analytics Project - Python Implementation</p>
                 </footer>
             </div>
-        </body>
+            <script>
+        // Function to trigger file input when edit button is clicked
+        function editVisualization(visualizationId) {
+            const fileInput = document.getElementById(visualizationId + '-input');
+            if (fileInput) {
+                fileInput.click();
+            }
+        }
+
+        // Function to handle image upload and display
+        function uploadImage(visualizationId, input) {
+            const file = input.files[0];
+            if (file) {
+                // Validate file type
+                if (!file.type.startsWith('image/')) {
+                    alert('Please select an image file.');
+                    return;
+                }
+
+                // Validate file size (max 5MB)
+                if (file.size > 5 * 1024 * 1024) {
+                    alert('File size must be less than 5MB.');
+                    return;
+                }
+
+                // Create preview
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const placeholder = document.getElementById(visualizationId + '-placeholder');
+                    if (placeholder) {
+                        // Replace placeholder with image
+                        placeholder.innerHTML = `<img src="${e.target.result}" style="width: 100%; height: 100%; object-fit: cover; border-radius: 10px;" alt="${visualizationId} visualization">`;
+                        
+                        // Add a remove button
+                        const removeBtn = document.createElement('button');
+                        removeBtn.innerHTML = '🗑️ Remove';
+                        removeBtn.style.cssText = 'position: absolute; top: 10px; left: 10px; background: rgba(255,0,0,0.7); color: white; border: none; padding: 8px 12px; border-radius: 5px; cursor: pointer; font-size: 12px;';
+                        removeBtn.onclick = function() {
+                            resetVisualization(visualizationId);
+                        };
+                        
+                        const wrapper = placeholder.parentElement;
+                        wrapper.appendChild(removeBtn);
+                        
+                        // Hide the edit button
+                        const editBtn = wrapper.querySelector('.edit-btn');
+                        if (editBtn) {
+                            editBtn.style.display = 'none';
+                        }
+                    }
+                };
+                reader.readAsDataURL(file);
+            }
+        }
+
+        // Function to reset visualization to placeholder
+        function resetVisualization(visualizationId) {
+            const placeholder = document.getElementById(visualizationId + '-placeholder');
+            const wrapper = placeholder.parentElement;
+            
+            if (placeholder) {
+                // Reset to original placeholder based on visualization type
+                const placeholders = {
+                    'time-series': { bg: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', icon: '📈 Time Series Sales Chart' },
+                    'grouped-bar': { bg: 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)', icon: '📊 Grouped Bar Chart' },
+                    'distribution': { bg: 'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)', icon: '📈 Distribution Charts' },
+                    'scatter': { bg: 'linear-gradient(135deg, #43e97b 0%, #38f9d7 100%)', icon: '🔗 Scatter Plot' },
+                    'heatmap': { bg: 'linear-gradient(135deg, #fa709a 0%, #fee140 100%)', icon: '🔥 Correlation Heatmap' },
+                    'segments': { bg: 'linear-gradient(135deg, #a8edea 0%, #fed6e3 100%)', icon: '👥 Customer Segments' },
+                    'pie': { bg: 'linear-gradient(135deg, #ff9a9e 0%, #fecfef 100%)', icon: '🥧 Pie Chart' },
+                    'multi-axis': { bg: 'linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%)', icon: '📊 Multi-Axis Chart' }
+                };
+                
+                const config = placeholders[visualizationId];
+                if (config) {
+                    placeholder.style.background = config.bg;
+                    placeholder.innerHTML = config.icon;
+                }
+                
+                // Remove remove button
+                const removeBtn = wrapper.querySelector('button[style*="rgba(255,0,0,0.7)"]');
+                if (removeBtn) {
+                    removeBtn.remove();
+                }
+                
+                // Show edit button
+                const editBtn = wrapper.querySelector('.edit-btn');
+                if (editBtn) {
+                    editBtn.style.display = 'block';
+                }
+                
+                // Reset file input
+                const fileInput = document.getElementById(visualizationId + '-input');
+                if (fileInput) {
+                    fileInput.value = '';
+                }
+            }
+        }
+
+        // Add hover effects for edit buttons
+        document.addEventListener('DOMContentLoaded', function() {
+            const editButtons = document.querySelectorAll('.edit-btn');
+            editButtons.forEach(btn => {
+                btn.addEventListener('mouseenter', function() {
+                    this.style.background = 'rgba(0,0,0,0.9)';
+                });
+                btn.addEventListener('mouseleave', function() {
+                    this.style.background = 'rgba(0,0,0,0.7)';
+                });
+            });
+        });
+    </script>
+</body>
         </html>
         

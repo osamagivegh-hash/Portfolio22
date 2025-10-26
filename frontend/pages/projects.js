@@ -113,6 +113,9 @@ export default function Projects() {
     // For regular projects, handle both absolute and relative URLs
     if (project.image && project.image.startsWith('http')) {
       return project.image
+    } else if (project.image && project.image.startsWith('/uploads/')) {
+      // Images from uploads directory
+      return `${window.location.origin}${project.image}`
     } else if (project.image && project.image.startsWith('/')) {
       return `${window.location.origin}${project.image}`
     } else if (project.image) {
