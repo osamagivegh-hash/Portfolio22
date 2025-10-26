@@ -432,13 +432,13 @@ export default function AdminProjects() {
                         Demo URL
                       </label>
                       <input
-                        type="url"
+                        type="text"
                         id="demo"
                         name="demo"
                         value={formData.demo}
                         onChange={handleChange}
                         className="input-field"
-                        placeholder="https://demo.com"
+                        placeholder="https://demo.com or /reports/file.html or any URL"
                       />
                     </div>
                   </div>
