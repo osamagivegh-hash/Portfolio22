@@ -1,7 +1,8 @@
 const mongoose = require('mongoose');
+const Profile = require('../models/Profile');
 const Project = require('../models/Project');
-const fs = require('fs');
 const path = require('path');
+const fs = require('fs');
 require('dotenv').config();
 
 const connectDB = async () => {
@@ -15,67 +16,64 @@ const connectDB = async () => {
 };
 
 const fixMissingImages = async () => {
+  await connectDB();
+
   try {
-    await connectDB();
+    console.log('🔍 Checking for missing images...\n');
 
-    // Get all projects
-    const projects = await Project.find();
-    console.log(`\nFound ${projects.length} projects to check:\n`);
-
-    let fixedCount = 0;
-
-    for (const project of projects) {
-      console.log(`Checking: ${project.title}`);
-      console.log(`Current image: ${project.image}`);
-      
-      let needsUpdate = false;
-      let newImagePath = project.image;
-      
-      // Check if image file exists
-      if (project.image && project.image.startsWith('/uploads/')) {
-        const imagePath = path.join(__dirname, '../uploads', project.image.replace('/uploads/', ''));
-        const exists = fs.existsSync(imagePath);
-        
-        if (!exists) {
-          console.log(`❌ Missing file: ${imagePath}`);
-          // Set a default image based on project type
-          if (project.title.includes('Data Analytics') || project.title.includes('Insurance')) {
-            newImagePath = '/reports/data_analytics_report.html';
-          } else {
-            newImagePath = '/project-default.jpg';
-          }
-          needsUpdate = true;
+    // Fix profile images
+    const profiles = await Profile.find();
+    for (const profile of profiles) {
+      if (profile.profileImage && profile.profileImage.startsWith('/uploads/')) {
+        const imagePath = path.join(__dirname, '../uploads', path.basename(profile.profileImage));
+        if (!fs.existsSync(imagePath)) {
+          console.log(`❌ Profile image missing: ${profile.profileImage}`);
+          profile.profileImage = '/profile.jpg'; // Set to default
+          await profile.save();
+          console.log(`✅ Updated profile image to: ${profile.profileImage}`);
         } else {
-          console.log(`✅ File exists: ${imagePath}`);
+          console.log(`✅ Profile image exists: ${profile.profileImage}`);
         }
-      } else if (project.image && project.image.startsWith('/reports/')) {
-        // HTML reports - these should work
-        console.log(`✅ HTML report: ${project.image}`);
-      } else if (!project.image || project.image === '') {
-        // No image set
-        console.log(`❌ No image set`);
-        if (project.title.includes('Data Analytics') || project.title.includes('Insurance')) {
-          newImagePath = '/reports/data_analytics_report.html';
-        } else {
-          newImagePath = '/project-default.jpg';
-        }
-        needsUpdate = true;
       }
-      
-      if (needsUpdate) {
-        project.image = newImagePath;
-        await project.save();
-        console.log(`✅ Updated to: ${newImagePath}`);
-        fixedCount++;
-      }
-      
-      console.log('---');
     }
 
-    console.log(`\n🎉 Fixed ${fixedCount} projects with missing images!`);
+    // Fix project images
+    const projects = await Project.find();
+    for (const project of projects) {
+      // Skip HTML reports
+      if (project.image && project.image.endsWith('.html')) {
+        console.log(`✅ HTML report project: ${project.title}`);
+        continue;
+      }
+
+      if (project.image && project.image.startsWith('/uploads/')) {
+        const imagePath = path.join(__dirname, '../uploads', path.basename(project.image));
+        if (!fs.existsSync(imagePath)) {
+          console.log(`❌ Project image missing: ${project.image} for ${project.title}`);
+          project.image = '/project-default.jpg'; // Set to default
+          await project.save();
+          console.log(`✅ Updated project image to: ${project.image}`);
+        } else {
+          console.log(`✅ Project image exists: ${project.image} for ${project.title}`);
+        }
+      } else if (project.image && !project.image.startsWith('/uploads/')) {
+        // Check if it's a default image that exists in frontend/public
+        const frontendImagePath = path.join(__dirname, '../../frontend/public', project.image);
+        if (!fs.existsSync(frontendImagePath)) {
+          console.log(`❌ Default image missing: ${project.image} for ${project.title}`);
+          project.image = '/project-default.jpg';
+          await project.save();
+          console.log(`✅ Updated project image to: ${project.image}`);
+        } else {
+          console.log(`✅ Default image exists: ${project.image} for ${project.title}`);
+        }
+      }
+    }
+
+    console.log('\n✅ Image fix completed!');
     process.exit(0);
   } catch (error) {
-    console.error('❌ Error fixing missing images:', error);
+    console.error('❌ Error fixing images:', error);
     process.exit(1);
   }
 };
