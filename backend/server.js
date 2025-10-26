@@ -33,8 +33,8 @@ app.use(compression());
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
-// Serve uploaded files
-app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+// Serve uploaded files from frontend/public/uploads (preserved across deployments)
+app.use('/uploads', express.static(path.join(__dirname, '../frontend/public/uploads')));
 
 // Serve frontend public files (for reports and other static assets)
 app.use(express.static(path.join(__dirname, '../frontend/public')));
