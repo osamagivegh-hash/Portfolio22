@@ -5,26 +5,30 @@ const { CloudinaryStorage } = require('multer-storage-cloudinary');
 const cloudinary = require('cloudinary').v2;
 
 const isCloudinaryConfigured =
-  !!process.env.CLOUDINARY_CLOUD_NAME &&
-  !!process.env.CLOUDINARY_API_KEY &&
-  !!process.env.CLOUDINARY_API_SECRET;
+  !!cloudinaryCloudName &&
+  !!cloudinaryApiKey &&
+  !!cloudinaryApiSecret;
 
 let storage;
 
 if (isCloudinaryConfigured) {
   cloudinary.config({
-    cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
-    api_key: process.env.CLOUDINARY_API_KEY,
-    api_secret: process.env.CLOUDINARY_API_SECRET,
+    cloud_name: cloudinaryCloudName,
+    api_key: cloudinaryApiKey,
+    api_secret: cloudinaryApiSecret,
+    secure: true,
+
+
+
   });
 
   storage = new CloudinaryStorage({
     cloudinary,
-    params: async (req, file) => ({
-      folder: 'portfolio_uploads',
+    params:  {
+      folder: cloudinaryFolder,
       resource_type: 'image',
       allowed_formats: ['jpg', 'jpeg', 'png', 'webp', 'gif'],
-    }),
+    },
   });
 
   console.log('✅ Cloudinary storage active');
@@ -53,4 +57,5 @@ module.exports = {
   storage,
   cloudinary: isCloudinaryConfigured ? cloudinary : null,
   isCloudinaryConfigured,
+  cloudinaryFolder,
 };
