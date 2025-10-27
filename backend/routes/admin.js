@@ -350,6 +350,57 @@ router.get('/verify', authenticateToken, (req, res) => {
   res.json({ valid: true, user: req.user });
 });
 
+// Get analytics visualizations
+router.get('/analytics/visualizations', authenticateToken, requireAdmin, async (req, res) => {
+  try {
+    const fs = require('fs');
+    const path = require('path');
+    
+    const reportsDir = path.join(__dirname, '../../frontend/public/reports');
+    const visualizations = [];
+    
+    // Define visualization types
+    const visualizationTypes = [
+      'time-series', 'grouped-bar', 'distribution', 'scatter', 
+      'heatmap', 'segments', 'pie', 'multi-axis'
+    ];
+    
+    // Check for existing visualization images
+    visualizationTypes.forEach(vizId => {
+      const pattern = `data_analytics_${vizId}_`;
+      try {
+        const files = fs.readdirSync(reportsDir);
+        const matchingFile = files.find(file => file.startsWith(pattern));
+        
+        if (matchingFile) {
+          visualizations.push({
+            id: vizId,
+            imageUrl: `/reports/${matchingFile}`,
+            filename: matchingFile
+          });
+        } else {
+          visualizations.push({
+            id: vizId,
+            imageUrl: null,
+            filename: null
+          });
+        }
+      } catch (error) {
+        visualizations.push({
+          id: vizId,
+          imageUrl: null,
+          filename: null
+        });
+      }
+    });
+    
+    res.json(visualizations);
+  } catch (error) {
+    console.error('Error fetching visualizations:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
 // Save visualization endpoint
 router.post('/visualization/save', authenticateToken, requireAdmin, upload.single('image'), async (req, res) => {
   try {
