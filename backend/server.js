@@ -15,6 +15,23 @@ const adminRoutes = require('./routes/admin');
 const app = express();
 const PORT = process.env.PORT || 5000;
 
+// Frontend path for static file serving
+const frontendPath = path.join(__dirname, '../frontend/out');
+
+// Utility function to normalize project media
+const normalizeProjectMedia = (projectData) => {
+  if (!projectData || typeof projectData !== 'object') {
+    return projectData;
+  }
+  if (projectData.image && typeof projectData.image === 'string' && projectData.image.endsWith('.html')) {
+    projectData = {
+      ...projectData,
+      image: projectData.image.replace(/_report\.html$/, '_preview.svg')
+    };
+  }
+  return projectData;
+};
+
 // Security middleware
 app.use(helmet({
   contentSecurityPolicy: false, // Disable for static file serving
@@ -86,7 +103,7 @@ app.get('/api/portfolio', async (req, res) => {
         profileImage: '/profile.jpg'
       },
       projects: projects ? projects.map(project => ({
-        ...project.toObject(),
+        ...normalizeProjectMedia(project.toObject()),
         id: project._id
       })) : [],
       skills: skills.map(skill => skill.name) || []
@@ -146,7 +163,6 @@ app.post('/api/contact', async (req, res) => {
 });
 
 // Serve static files from the Next.js build
-const frontendPath = path.join(__dirname, '../frontend/out');
 
 // Check if frontend build exists
 if (!fs.existsSync(frontendPath)) {

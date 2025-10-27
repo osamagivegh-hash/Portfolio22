@@ -35,49 +35,41 @@ const upload = multer({
   }
 });
 
-// In-memory data storage (in production, use a database)
-let portfolioData = {
-  profile: {
-    name: 'John Doe',
-    title: 'Full-Stack Developer & UI/UX Designer',
-    bio: 'Passionate about creating beautiful, functional, and user-centered digital experiences. I specialize in modern web technologies and love turning complex problems into simple, elegant solutions.',
-    email: 'john@example.com',
-    github: 'https://github.com',
-    linkedin: 'https://linkedin.com',
-    profileImage: '/profile.jpg'
-  },
-  projects: [
-    {
-      id: 1,
-      title: 'E-Commerce Platform',
-      description: 'A full-stack e-commerce solution built with Next.js, Node.js, and MongoDB. Features include user authentication, payment processing, and admin dashboard.',
-      technologies: ['Next.js', 'Node.js', 'MongoDB', 'Stripe'],
-      github: 'https://github.com',
-      demo: 'https://demo.com',
-      featured: true,
-      image: '/project1.jpg'
-    },
-    {
-      id: 2,
-      title: 'Task Management App',
-      description: 'A collaborative task management application with real-time updates, drag-and-drop functionality, and team collaboration features.',
-      technologies: ['React', 'Express', 'Socket.io', 'PostgreSQL'],
-      github: 'https://github.com',
-      demo: 'https://demo.com',
-      featured: true,
-      image: '/project2.jpg'
-    }
-  ],
-  skills: [
-    'React/Next.js',
-    'Node.js/Express',
-    'TypeScript',
-    'Tailwind CSS',
-    'MongoDB',
-    'PostgreSQL',
-    'AWS',
-    'Docker'
-  ]
+// Utility functions for image handling
+const getUploadedImageInfo = (file) => {
+  if (!file) {
+    return { imageUrl: null, imagePublicId: null };
+  }
+  
+  if (isCloudinaryConfigured) {
+    const secureUrl = file.path || file.secure_url;
+    const publicId = file.filename || file.public_id || null;
+    return {
+      imageUrl: secureUrl,
+      imagePublicId: publicId
+    };
+  }
+  
+  return {
+    imageUrl: file.filename ? `/uploads/${file.filename}` : null,
+    imagePublicId: null
+  };
+};
+
+const ensureProjectPreviewImage = (projectData) => {
+  if (!projectData || !projectData.image || typeof projectData.image !== 'string') {
+    return projectData;
+  }
+  
+  if (projectData.image.endsWith('.html')) {
+    const previewCandidate = projectData.image.replace(/_report\.html$/, '_preview.svg');
+    return {
+      ...projectData,
+      image: previewCandidate
+    };
+  }
+  
+  return projectData;
 };
 
 // Admin login
@@ -134,7 +126,10 @@ router.get('/portfolio', authenticateToken, requireAdmin, async (req, res) => {
         linkedin: 'https://linkedin.com',
         profileImage: '/profile.jpg'
       },
-      projects: projects || [],
+      projects: projects.map(project => ({
+        ...ensureProjectPreviewImage(project.toObject()),
+        id: project._id
+      })),
       skills: skills.map(skill => skill.name) || []
     });
   } catch (error) {
@@ -172,15 +167,32 @@ router.post('/portfolio/profile/image', authenticateToken, requireAdmin, upload.
       return res.status(400).json({ error: 'No image file provided' });
     }
     
-    const imageUrl = `/uploads/${req.file.filename}`;
+    const { imageUrl, imagePublicId } = getUploadedImageInfo(req.file);
+    
+    if (!imageUrl) {
+      return res.status(409).json({ error: 'Failed to process uploaded image' });
+    }
     
     // Update profile in database
     let profile = await Profile.findOne();
     if (profile) {
+      // Clean up old Cloudinary image if exists
+      if (profile.profileImagePublicId && imagePublicId && isCloudinaryConfigured && cloudinary) {
+        try {
+          await cloudinary.uploader.destroy(profile.profileImagePublicId);
+        } catch (cleanupError) {
+          console.error('Failed to remove previous profile image from Cloudinary:', cleanupError);
+        }
+      }
+      
       profile.profileImage = imageUrl;
+      profile.profileImagePublicId = imagePublicId;
       await profile.save();
     } else {
-      profile = new Profile({ profileImage: imageUrl });
+      profile = new Profile({
+        profileImage: imageUrl,
+        profileImagePublicId: imagePublicId
+      });
       await profile.save();
     }
     
@@ -197,7 +209,7 @@ router.get('/portfolio/projects', authenticateToken, requireAdmin, async (req, r
     const projects = await Project.find().sort({ order: 1, createdAt: -1 });
     // Transform MongoDB _id to id for frontend compatibility
     const transformedProjects = projects.map(project => ({
-      ...project.toObject(),
+      ...ensureProjectPreviewImage(project.toObject()),
       id: project._id
     }));
     res.json(transformedProjects);
@@ -211,18 +223,20 @@ router.get('/portfolio/projects', authenticateToken, requireAdmin, async (req, r
 router.post('/portfolio/projects', authenticateToken, requireAdmin, upload.single('image'), async (req, res) => {
   try {
     const projectData = req.body;
+    const { imageUrl, imagePublicId } = getUploadedImageInfo(req.file);
     
     const newProject = new Project({
       ...projectData,
       technologies: projectData.technologies ? projectData.technologies.split(',').map(t => t.trim()) : [],
       featured: projectData.featured === 'true',
-      image: req.file ? `/uploads/${req.file.filename}` : '/project-default.jpg'
+      image: imageUrl || '/project-default.jpg',
+      imagePublicId: imagePublicId || null
     });
     
     await newProject.save();
     // Transform MongoDB _id to id for frontend compatibility
     const transformedProject = {
-      ...newProject.toObject(),
+      ...ensureProjectPreviewImage(newProject.toObject()),
       id: newProject._id
     };
     res.json({ success: true, project: transformedProject });
@@ -246,11 +260,15 @@ router.put('/portfolio/projects/:id', authenticateToken, requireAdmin, upload.si
     if (updateData.technologies) {
       updateData.technologies = updateData.technologies.split(',').map(t => t.trim());
     }
-    if (updateData.featured) {
-      updateData.featured = updateData.featured === 'true';
+    if (typeof updateData.featured !== 'undefined') {
+      updateData.featured = updateData.featured === 'true' || updateData.featured === true;
     }
+    
+    // Handle image upload
     if (req.file) {
-      updateData.image = `/uploads/${req.file.filename}`;
+      const { imageUrl, imagePublicId } = getUploadedImageInfo(req.file);
+      updateData.image = imageUrl;
+      updateData.imagePublicId = imagePublicId;
     }
     
     Object.assign(project, updateData);
@@ -258,7 +276,7 @@ router.put('/portfolio/projects/:id', authenticateToken, requireAdmin, upload.si
     
     // Transform MongoDB _id to id for frontend compatibility
     const transformedProject = {
-      ...project.toObject(),
+      ...ensureProjectPreviewImage(project.toObject()),
       id: project._id
     };
     res.json({ success: true, project: transformedProject });
@@ -276,6 +294,15 @@ router.delete('/portfolio/projects/:id', authenticateToken, requireAdmin, async 
     
     if (!project) {
       return res.status(404).json({ error: 'Project not found' });
+    }
+    
+    // Clean up Cloudinary image if exists
+    if (project.imagePublicId && isCloudinaryConfigured && cloudinary) {
+      try {
+        await cloudinary.uploader.destroy(project.imagePublicId);
+      } catch (cleanupError) {
+        console.error('Failed to remove project image from Cloudinary:', cleanupError);
+      }
     }
     
     res.json({ success: true });

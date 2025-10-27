@@ -20,6 +20,7 @@ export default function AdminProjects() {
   })
   const [selectedImage, setSelectedImage] = useState(null)
   const [imagePreview, setImagePreview] = useState(null)
+  const [isSaving, setIsSaving] = useState(false)
 
   useEffect(() => {
     fetchProjects()
@@ -73,6 +74,7 @@ export default function AdminProjects() {
     e.preventDefault()
     setMessage('')
     setError('')
+    setIsSaving(true)
 
     try {
       const token = localStorage.getItem('adminToken')
@@ -124,6 +126,8 @@ export default function AdminProjects() {
       }
     } catch (error) {
       setError('Network error')
+    } finally {
+      setIsSaving(false)
     }
   }
 
@@ -468,8 +472,9 @@ export default function AdminProjects() {
                     <button
                       type="submit"
                       className="btn-primary"
+                      disabled={isSaving}
                     >
-                      {editingProject ? 'Update Project' : 'Add Project'}
+                      {isSaving ? 'Saving...' : (editingProject ? 'Update Project' : 'Add Project')}
                     </button>
                   </div>
                 </form>

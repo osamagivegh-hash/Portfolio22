@@ -33,7 +33,7 @@ const profileSchema = new mongoose.Schema({
     type: String,
     default: '/profile.jpg'
   },
-  cloudinaryPublicId: {
+  profileImagePublicId: {
     type: String,
     default: null
   }
