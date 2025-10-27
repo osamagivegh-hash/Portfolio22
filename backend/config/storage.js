@@ -16,16 +16,15 @@ if (isCloudinaryConfigured) {
     cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
     api_key: process.env.CLOUDINARY_API_KEY,
     api_secret: process.env.CLOUDINARY_API_SECRET,
-    secure: true,
   });
 
   storage = new CloudinaryStorage({
     cloudinary,
-    params: {
+    params: async (req, file) => ({
       folder: 'portfolio_uploads',
       resource_type: 'image',
-      allowed_formats: ['jpg', 'jpeg', 'png', 'webp', 'gif']
-    },
+      allowed_formats: ['jpg', 'jpeg', 'png', 'webp', 'gif'],
+    }),
   });
 
   console.log('✅ Cloudinary storage active');

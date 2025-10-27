@@ -276,7 +276,21 @@ router.put('/portfolio/projects/:id', authenticateToken, requireAdmin, upload.si
     
     // Handle image upload
     if (req.file) {
+      console.log('📁 File received:', {
+        originalname: req.file.originalname,
+        mimetype: req.file.mimetype,
+        size: req.file.size,
+        fieldname: req.file.fieldname
+      });
+      
       const { imageUrl, imagePublicId } = getUploadedImageInfo(req.file);
+      console.log('☁️ Cloudinary upload result:', {
+        imageUrl,
+        imagePublicId,
+        filePath: req.file.path,
+        secureUrl: req.file.secure_url
+      });
+      
       updateData.image = imageUrl;
       updateData.imagePublicId = imagePublicId;
     }
