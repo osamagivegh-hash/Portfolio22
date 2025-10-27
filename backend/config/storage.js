@@ -16,6 +16,8 @@ if (isCloudinaryConfigured) {
     cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
     api_key: process.env.CLOUDINARY_API_KEY,
     api_secret: process.env.CLOUDINARY_API_SECRET,
+    secure: true, // Use HTTPS
+    api_proxy: process.env.CLOUDINARY_API_PROXY, // Optional proxy
   });
 
   storage = new CloudinaryStorage({

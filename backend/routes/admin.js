@@ -42,12 +42,21 @@ const getUploadedImageInfo = (file) => {
   }
   
   if (isCloudinaryConfigured) {
-    const secureUrl = file.path || file.secure_url;
-    const publicId = file.filename || file.public_id || null;
-    return {
-      imageUrl: secureUrl,
-      imagePublicId: publicId
-    };
+    try {
+      const secureUrl = file.path || file.secure_url;
+      const publicId = file.filename || file.public_id || null;
+      return {
+        imageUrl: secureUrl,
+        imagePublicId: publicId
+      };
+    } catch (error) {
+      console.error('Cloudinary error, falling back to local:', error);
+      // Fallback to local if Cloudinary fails
+      return {
+        imageUrl: file.filename ? `/uploads/${file.filename}` : null,
+        imagePublicId: null
+      };
+    }
   }
   
   return {
