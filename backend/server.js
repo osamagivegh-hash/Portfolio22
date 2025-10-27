@@ -114,6 +114,19 @@ app.get('/api/portfolio', async (req, res) => {
   }
 });
 
+// Storage status (for quick runtime checks)
+app.get('/api/storage/status', (req, res) => {
+  try {
+    const { isCloudinaryConfigured } = require('./config/storage');
+    res.json({
+      storage: isCloudinaryConfigured ? 'cloudinary' : 'local',
+      cloud_name: isCloudinaryConfigured ? process.env.CLOUDINARY_CLOUD_NAME : null
+    });
+  } catch (e) {
+    res.status(500).json({ error: 'storage status error', details: String(e) });
+  }
+});
+
 // Admin routes
 app.use('/api/admin', adminRoutes);
 
@@ -214,6 +227,26 @@ const startServer = async () => {
       console.log(`Server is running on port ${PORT}`);
       console.log(`Environment: ${process.env.NODE_ENV || 'development'}`);
       console.log(`Frontend path: ${frontendPath}`);
+      
+      // Log storage mode
+      try {
+        const { isCloudinaryConfigured } = require('./config/storage');
+        console.log(`Storage mode: ${isCloudinaryConfigured ? 'Cloudinary' : 'Local (dev only)'}`);
+      } catch (e) {
+        console.warn('Storage status check failed:', e);
+      }
+      
+      // Production warning for missing Cloudinary
+      if (process.env.NODE_ENV === 'production') {
+        try {
+          const { isCloudinaryConfigured } = require('./config/storage');
+          if (!isCloudinaryConfigured) {
+            console.warn('⚠️ PRODUCTION without Cloudinary: uploads will not persist across deploys.');
+          }
+        } catch (e) {
+          console.warn('Could not check Cloudinary configuration:', e);
+        }
+      }
     });
   } catch (error) {
     console.error('Failed to start server:', error);

@@ -1,14 +1,13 @@
-const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
+const multer = require('multer');
 const { CloudinaryStorage } = require('multer-storage-cloudinary');
 const cloudinary = require('cloudinary').v2;
 
-const isCloudinaryConfigured = Boolean(
-  process.env.CLOUDINARY_CLOUD_NAME &&
-  process.env.CLOUDINARY_API_KEY &&
-  process.env.CLOUDINARY_API_SECRET
-);
+const isCloudinaryConfigured =
+  !!process.env.CLOUDINARY_CLOUD_NAME &&
+  !!process.env.CLOUDINARY_API_KEY &&
+  !!process.env.CLOUDINARY_API_SECRET;
 
 let storage;
 
@@ -16,37 +15,42 @@ if (isCloudinaryConfigured) {
   cloudinary.config({
     cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
     api_key: process.env.CLOUDINARY_API_KEY,
-    api_secret: process.env.CLOUDINARY_API_SECRET
+    api_secret: process.env.CLOUDINARY_API_SECRET,
   });
 
   storage = new CloudinaryStorage({
     cloudinary,
-    params: {
-      folder: process.env.CLOUDINARY_FOLDER || 'portfolio_uploads',
-      allowed_formats: ['jpg', 'jpeg', 'png', 'gif', 'webp'],
-      transformation: [{ quality: 'auto:good', fetch_format: 'auto' }]
-    }
+    params: async (req, file) => ({
+      folder: 'portfolio_uploads',
+      // Let Cloudinary pick optimal format/quality while preserving transparencies when applicable
+      transformation: [{ quality: 'auto', fetch_format: 'auto' }],
+      resource_type: 'image',
+      // keep original filename without path traversal
+      public_id: path.parse(file.originalname).name.replace(/[^a-zA-Z0-9-_]/g, '_'),
+      overwrite: false,
+    }),
   });
-} else {
-  const uploadPath = path.join(__dirname, '../../frontend/public/uploads');
 
-  if (!fs.existsSync(uploadPath)) {
-    fs.mkdirSync(uploadPath, { recursive: true });
-  }
+  console.log('✅ Cloudinary storage active');
+} else {
+  // Local fallback for dev only (ephemeral in many hosts; fine for local dev)
+  const localDir = path.join(__dirname, '../../frontend/public/uploads');
+  if (!fs.existsSync(localDir)) fs.mkdirSync(localDir, { recursive: true });
 
   storage = multer.diskStorage({
-    destination: (req, file, cb) => {
-      cb(null, uploadPath);
-    },
+    destination: (req, file, cb) => cb(null, localDir),
     filename: (req, file, cb) => {
-      const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1e9);
-      cb(null, `${file.fieldname}-${uniqueSuffix}${path.extname(file.originalname)}`);
-    }
+      const ext = path.extname(file.originalname);
+      const base = path.parse(file.originalname).name.replace(/[^a-zA-Z0-9-_]/g, '_');
+      cb(null, `${Date.now()}_${base}${ext}`);
+    },
   });
+
+  console.log('⚠️ Cloudinary not configured — using local uploads at /public/uploads');
 }
 
 module.exports = {
   storage,
   cloudinary: isCloudinaryConfigured ? cloudinary : null,
-  isCloudinaryConfigured
+  isCloudinaryConfigured,
 };
