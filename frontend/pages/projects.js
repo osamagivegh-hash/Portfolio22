@@ -107,9 +107,25 @@ export default function Projects() {
 
   // Helper function to get report preview image
   const getReportPreview = (project) => {
+    // For HTML reports, first try to use the project's actual image
+    if (isHtmlReport(project) && project.image && !project.image.endsWith('.html')) {
+      // Use the project's image if it's not an HTML file
+      if (project.image.startsWith('http')) {
+        return project.image
+      } else if (project.image.startsWith('/uploads/')) {
+        return `${window.location.origin}${project.image}`
+      } else if (project.image.startsWith('/')) {
+        return `${window.location.origin}${project.image}`
+      } else if (project.image) {
+        return `${window.location.origin}/${project.image}`
+      }
+    }
+    
+    // Fallback to SVG placeholder for HTML reports without proper images
     if (isHtmlReport(project)) {
       return 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAwIiBoZWlnaHQ9IjE5MiIgdmlld0JveD0iMCAwIDQwMCAxOTIiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSI0MDAiIGhlaWdodD0iMTkyIiBmaWxsPSIjRjNGNEY2Ii8+CjxyZWN0IHg9IjUwIiB5PSI0MCIgd2lkdGg9IjMwMCIgaGVpZ2h0PSIxMTIiIGZpbGw9IiM2NjdlZWEiLz4KPHN2ZyB4PSIxNzUiIHk9Ijc2IiB3aWR0aD0iNTAiIGhlaWdodD0iNDAiIHZpZXdCb3g9IjAgMCA1MCA0MCIgZmlsbD0ibm9uZSI+CjxwYXRoIGQ9Ik0yNSAyMEMxMS4xOTIgMjAgMCAyOS4xOTIgMCA0MHMxMS4xOTIgMjAgMjUgMjAgMjUtOS4xOTIgMjUtMjBTMzguODA4IDIwIDI1IDIwWk0yNSAzMEMyMS42ODYgMzAgMTkgMzIuNjg2IDE5IDM2czIuNjg2IDYgNiA2IDYtMi42ODYgNi02LTIuNjg2LTYtNi02WiIgZmlsbD0iI2ZmZiIvPgo8L3N2Zz4KPC9zdmc+'
     }
+    
     // For regular projects, handle both absolute and relative URLs
     if (project.image && project.image.startsWith('http')) {
       return project.image

@@ -62,6 +62,7 @@ export default function AdminLayout({ children }) {
     { href: '/admin/dashboard', label: 'Dashboard', icon: '📊' },
     { href: '/admin/profile', label: 'Profile', icon: '👤' },
     { href: '/admin/projects', label: 'Projects', icon: '💼' },
+    { href: '/admin/analytics', label: 'Analytics', icon: '📈' },
     { href: '/admin/skills', label: 'Skills', icon: '🛠️' },
     { href: '/admin/messages', label: 'Messages', icon: '💬' },
   ]
