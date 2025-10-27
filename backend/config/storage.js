@@ -20,15 +20,18 @@ if (isCloudinaryConfigured) {
 
   storage = new CloudinaryStorage({
     cloudinary,
-    params: async (req, file) => ({
+    params: {
       folder: 'portfolio_uploads',
-      // Let Cloudinary pick optimal format/quality while preserving transparencies when applicable
       transformation: [{ quality: 'auto', fetch_format: 'auto' }],
       resource_type: 'image',
-      // keep original filename without path traversal
-      public_id: path.parse(file.originalname).name.replace(/[^a-zA-Z0-9-_]/g, '_'),
       overwrite: false,
-    }),
+    },
+    filename: (req, file, cb) => {
+      // Generate a unique filename
+      const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1e9);
+      const base = path.parse(file.originalname).name.replace(/[^a-zA-Z0-9-_]/g, '_');
+      cb(null, `${base}_${uniqueSuffix}`);
+    },
   });
 
   console.log('✅ Cloudinary storage active');

@@ -130,6 +130,9 @@ app.get('/api/storage/status', (req, res) => {
 // Admin routes
 app.use('/api/admin', adminRoutes);
 
+// Debug: Log all API routes
+console.log('Admin routes loaded successfully');
+
 app.post('/api/contact', async (req, res) => {
   try {
     const { name, email, message } = req.body;
@@ -186,7 +189,7 @@ if (!fs.existsSync(frontendPath)) {
   app.use(express.static(frontendPath));
 }
 
-// Fallback route for client-side routing (SPA)
+// Fallback route for client-side routing (SPA) - only for GET requests
 app.get('*', (req, res) => {
   // Don't serve index.html for API routes
   if (req.path.startsWith('/api/')) {
