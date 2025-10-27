@@ -16,27 +16,23 @@ if (isCloudinaryConfigured) {
     cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
     api_key: process.env.CLOUDINARY_API_KEY,
     api_secret: process.env.CLOUDINARY_API_SECRET,
-    secure: true, // Use HTTPS
-    api_proxy: process.env.CLOUDINARY_API_PROXY, // Optional proxy
+    secure: true,
   });
 
   storage = new CloudinaryStorage({
     cloudinary,
     params: {
       folder: 'portfolio_uploads',
-      transformation: [{ quality: 'auto', fetch_format: 'auto' }],
       resource_type: 'image',
-      overwrite: false,
-    },
-    filename: (req, file, cb) => {
-      // Generate a unique filename
-      const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1e9);
-      const base = path.parse(file.originalname).name.replace(/[^a-zA-Z0-9-_]/g, '_');
-      cb(null, `${base}_${uniqueSuffix}`);
+      allowed_formats: ['jpg', 'jpeg', 'png', 'webp', 'gif']
     },
   });
 
   console.log('✅ Cloudinary storage active');
+  console.log('Cloudinary configured:', {
+    cloud_name: cloudinary.config().cloud_name,
+    api_key: cloudinary.config().api_key ? '✅ loaded' : '❌ missing',
+  });
 } else {
   // Local fallback for dev only (ephemeral in many hosts; fine for local dev)
   const localDir = path.join(__dirname, '../../frontend/public/uploads');
