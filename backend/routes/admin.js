@@ -248,6 +248,7 @@ router.post('/portfolio/projects', authenticateToken, requireAdmin, upload.singl
 
 // Update project
 router.put('/portfolio/projects/:id', authenticateToken, requireAdmin, upload.single('image'), async (req, res) => {
+  console.log(`[ADMIN DEBUG] PUT /portfolio/projects/:id called with ID: ${req.params.id}`);
   try {
     const projectId = req.params.id;
     const project = await Project.findById(projectId);

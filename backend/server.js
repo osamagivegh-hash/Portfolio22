@@ -15,6 +15,12 @@ const adminRoutes = require('./routes/admin');
 const app = express();
 const PORT = process.env.PORT || 5000;
 
+// Diagnostic middleware to log all incoming API requests
+app.use((req, res, next) => {
+  console.log(`[DEBUG] ${req.method} ${req.path}`);
+  next();
+});
+
 // Frontend path for static file serving
 const frontendPath = path.join(__dirname, '../frontend/out');
 
@@ -114,6 +120,18 @@ app.get('/api/portfolio', async (req, res) => {
   }
 });
 
+// Debug routes endpoint to list all available routes
+app.get('/api/debug/routes', (req, res) => {
+  const routes = [];
+  app._router.stack.forEach(m => {
+    if (m.route) {
+      const methods = Object.keys(m.route.methods).join(',').toUpperCase();
+      routes.push(`${methods} ${m.route.path}`);
+    }
+  });
+  res.json({ routes });
+});
+
 // Storage status (for quick runtime checks)
 app.get('/api/storage/status', (req, res) => {
   try {
@@ -129,6 +147,7 @@ app.get('/api/storage/status', (req, res) => {
 
 // Admin routes
 app.use('/api/admin', adminRoutes);
+console.log('[SERVER DEBUG] Admin routes mounted at /api/admin');
 
 // Debug: Log all API routes
 console.log('Admin routes loaded successfully');
