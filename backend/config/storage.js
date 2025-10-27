@@ -4,24 +4,41 @@ const multer = require('multer');
 const { CloudinaryStorage } = require('multer-storage-cloudinary');
 const cloudinary = require('cloudinary').v2;
 
+// 🧩 حمل ملف البيئة (.env) من مجلد backend عند التشغيل المحلي
+try {
+  require('dotenv').config({ path: path.join(__dirname, '../.env') });
+} catch (e) {
+  // في Render لا حاجة لهذا السطر لأن Render يحقن المتغيرات تلقائيًا
+}
+
+// 🧹 دالة صغيرة لإزالة أي مسافات زائدة من قيم .env
+const trimEnv = (v) => (typeof v === 'string' ? v.trim() : undefined);
+
+// 🔐 قراءة المتغيرات وتنظيفها
+const cloudinaryCloudName = trimEnv(process.env.CLOUDINARY_CLOUD_NAME);
+const cloudinaryApiKey = trimEnv(process.env.CLOUDINARY_API_KEY);
+const cloudinaryApiSecret = trimEnv(process.env.CLOUDINARY_API_SECRET);
+const cloudinaryFolder = trimEnv(process.env.CLOUDINARY_FOLDER) || 'portfolio_uploads';
+
+// 🧠 فحص التهيئة
 const isCloudinaryConfigured =
-  !!process.env.CLOUDINARY_CLOUD_NAME &&
-  !!process.env.CLOUDINARY_API_KEY &&
-  !!process.env.CLOUDINARY_API_SECRET;
+  !!cloudinaryCloudName && !!cloudinaryApiKey && !!cloudinaryApiSecret;
 
 let storage;
 
 if (isCloudinaryConfigured) {
+  // ✅ تهيئة Cloudinary مرة واحدة فقط
   cloudinary.config({
-    cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
-    api_key: process.env.CLOUDINARY_API_KEY,
-    api_secret: process.env.CLOUDINARY_API_SECRET,
+    cloud_name: cloudinaryCloudName,
+    api_key: cloudinaryApiKey,
+    api_secret: cloudinaryApiSecret,
   });
 
+  // ✅ إعداد تخزين بسيط وآمن — بدون أي توقيع يدوي
   storage = new CloudinaryStorage({
     cloudinary,
     params: async (req, file) => ({
-      folder: 'portfolio_uploads',
+      folder: cloudinaryFolder,
       resource_type: 'image',
       allowed_formats: ['jpg', 'jpeg', 'png', 'webp', 'gif'],
     }),
@@ -29,11 +46,12 @@ if (isCloudinaryConfigured) {
 
   console.log('✅ Cloudinary storage active');
   console.log('Cloudinary configured:', {
-    cloud_name: cloudinary.config().cloud_name,
-    api_key: cloudinary.config().api_key ? '✅ loaded' : '❌ missing',
+    cloud_name: cloudinaryCloudName,
+    api_key_loaded: !!cloudinaryApiKey,
+    folder: cloudinaryFolder,
   });
 } else {
-  // Local fallback for dev only (ephemeral in many hosts; fine for local dev)
+  // ⚙️ رفع محلي أثناء التطوير فقط (لن يعمل في Render بعد كل deploy)
   const localDir = path.join(__dirname, '../../frontend/public/uploads');
   if (!fs.existsSync(localDir)) fs.mkdirSync(localDir, { recursive: true });
 
@@ -49,8 +67,10 @@ if (isCloudinaryConfigured) {
   console.log('⚠️ Cloudinary not configured — using local uploads at /public/uploads');
 }
 
+// 📦 التصدير
 module.exports = {
   storage,
   cloudinary: isCloudinaryConfigured ? cloudinary : null,
   isCloudinaryConfigured,
+  cloudinaryFolder,
 };
