@@ -251,16 +251,36 @@ router.get('/verify', authenticateToken, (req, res) => res.json({ valid: true, u
 // 📊 Get analytics visualizations from MongoDB
 router.get('/analytics/visualizations', authenticateToken, requireAdmin, async (req, res) => {
   try {
-    const visualizations = await Visualization.find().sort({ createdAt: -1 });
+    const { reportType } = req.query;
+    
+    // Build filter based on query params
+    const filter = {};
+    if (reportType && reportType !== 'all') {
+      filter.reportType = reportType;
+    }
+    
+    // Fetch visualizations with sorting
+    const visualizations = await Visualization.find(filter)
+      .sort({ updatedAt: -1, createdAt: -1 });
+    
+    // Deduplicate by visualizationId (keep latest)
+    const deduped = new Map();
+    visualizations.forEach(viz => {
+      const key = viz.visualizationId;
+      if (!deduped.has(key) || viz.updatedAt > deduped.get(key).updatedAt) {
+        deduped.set(key, viz);
+      }
+    });
     
     // Transform MongoDB documents to match frontend expectations
-    const transformedVisualizations = visualizations.map(viz => ({
+    const transformedVisualizations = Array.from(deduped.values()).map(viz => ({
       id: viz.visualizationId, // Use visualizationId as the id field
       visualizationId: viz.visualizationId,
       reportType: viz.reportType,
       imageUrl: viz.imageUrl,
       imagePublicId: viz.imagePublicId,
-      createdAt: viz.createdAt
+      createdAt: viz.createdAt,
+      updatedAt: viz.updatedAt
     }));
     
     res.json(transformedVisualizations);
@@ -277,40 +297,69 @@ router.post('/visualization/save', authenticateToken, requireAdmin, upload.singl
     const { visualizationId, reportType } = req.body;
     if (!visualizationId || !reportType) return res.status(400).json({ error: 'Missing visualizationId or reportType' });
 
-    let imageUrl, imagePublicId;
-
-    // ☁️ Cloudinary mode
-    if (isCloudinaryConfigured && req.file && req.file.path?.startsWith('http')) {
-      imageUrl = req.file.path || req.file.secure_url;
-      imagePublicId = req.file.filename || req.file.public_id || null;
-      console.log('☁️ Visualization uploaded to Cloudinary:', imageUrl);
-    } else {
-      // 💾 Local fallback (dev only)
-      const fileExtension = path.extname(req.file.originalname);
-      const filename = `${reportType}_${visualizationId}_${Date.now()}${fileExtension}`;
-      const reportsDir = path.join(__dirname, '../../frontend/public/reports');
-      if (!fs.existsSync(reportsDir)) fs.mkdirSync(reportsDir, { recursive: true });
-      fs.renameSync(req.file.path, path.join(reportsDir, filename));
-      imageUrl = `/reports/${filename}`;
-      imagePublicId = null;
-      console.log('🗂 Visualization saved locally:', imageUrl);
+    const { imageUrl, imagePublicId } = getUploadedImageInfo(req.file);
+    
+    // Define filter for finding existing visualization
+    const filter = { visualizationId, reportType };
+    
+    // Clean up previous assets
+    const existingVisualization = await Visualization.findOne(filter);
+    if (existingVisualization) {
+      // Clean up old Cloudinary image
+      if (isCloudinaryConfigured && existingVisualization.imagePublicId && 
+          existingVisualization.imagePublicId !== imagePublicId) {
+        try {
+          await cloudinary.uploader.destroy(existingVisualization.imagePublicId);
+          console.log('🗑️ Old Cloudinary image deleted:', existingVisualization.imagePublicId);
+        } catch (error) {
+          console.error('Error deleting old Cloudinary image:', error);
+        }
+      }
+      
+      // Clean up old local file
+      if (!isCloudinaryConfigured && existingVisualization.imageUrl && 
+          existingVisualization.imageUrl.startsWith('/')) {
+        try {
+          const existingPath = path.join(__dirname, '../../frontend/public', existingVisualization.imageUrl);
+          if (fs.existsSync(existingPath)) {
+            fs.unlinkSync(existingPath);
+            console.log('🗑️ Old local file deleted:', existingPath);
+          }
+        } catch (error) {
+          console.error('Error deleting old local file:', error);
+        }
+      }
     }
 
-    // 💾 Save to MongoDB
-    const visualization = new Visualization({
+    // Upsert visualization (update or insert)
+    const newVisualization = {
       visualizationId,
       reportType,
       imageUrl,
       imagePublicId
-    });
+    };
     
-    await visualization.save();
-    console.log('✅ Visualization saved to DB and Cloudinary:', imageUrl);
+    const updatedVisualization = await Visualization.findOneAndUpdate(
+      filter,
+      newVisualization,
+      { upsert: true, new: true, setDefaultsOnInsert: true }
+    );
+    
+    console.log('✅ Visualization saved to DB and storage:', imageUrl);
     
     res.json({ 
       success: true, 
       imageUrl, 
-      imagePublicId, 
+      imagePublicId,
+      visualization: {
+        id: updatedVisualization.visualizationId,
+        visualizationId: updatedVisualization.visualizationId,
+        reportType: updatedVisualization.reportType,
+        imageUrl: updatedVisualization.imageUrl,
+        imagePublicId: updatedVisualization.imagePublicId,
+        createdAt: updatedVisualization.createdAt,
+        updatedAt: updatedVisualization.updatedAt
+      },
       message: isCloudinaryConfigured ? 'Visualization uploaded to Cloudinary and saved to DB' : 'Visualization saved locally and to DB'
     });
   } catch (error) {

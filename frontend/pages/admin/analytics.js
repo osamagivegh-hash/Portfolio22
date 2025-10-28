@@ -115,14 +115,28 @@ export default function AdminAnalytics() {
 
       if (response.ok) {
         const result = await response.json()
+        const updatedVisualization = result.visualization || {
+          id: visualizationId,
+          visualizationId,
+          reportType: 'data_analytics',
+          imageUrl: result.imageUrl,
+          imagePublicId: result.imagePublicId
+        }
+        
         setMessage(`✅ ${visualizationTypes.find(v => v.id === visualizationId)?.name} updated successfully!`)
         
-        // Update the visualization in state
-        setVisualizations(prev => prev.map(v => 
-          v.id === visualizationId 
-            ? { ...v, imageUrl: result.imageUrl }
-            : v
-        ))
+        // Update the visualization in state (insert if missing)
+        setVisualizations(prev => {
+          const exists = prev.some(v => (v.id || v.visualizationId) === visualizationId)
+          if (exists) {
+            return prev.map(v => 
+              (v.id || v.visualizationId) === visualizationId 
+                ? { ...v, ...updatedVisualization }
+                : v
+            )
+          }
+          return [...prev, updatedVisualization]
+        })
       } else {
         setError('Failed to upload visualization')
       }
@@ -134,7 +148,7 @@ export default function AdminAnalytics() {
   }
 
   const getVisualizationImage = (visualizationId) => {
-    const visualization = visualizations.find(v => v.id === visualizationId)
+    const visualization = visualizations.find(v => (v.id || v.visualizationId) === visualizationId)
     return visualization?.imageUrl || null
   }
 
