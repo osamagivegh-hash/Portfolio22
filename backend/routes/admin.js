@@ -250,8 +250,10 @@ router.get('/verify', authenticateToken, (req, res) => res.json({ valid: true, u
 
 // 📊 Get analytics visualizations from MongoDB
 router.get('/analytics/visualizations', authenticateToken, requireAdmin, async (req, res) => {
+  console.log('📊 [DEBUG] GET /analytics/visualizations called');
   try {
     const { reportType } = req.query;
+    console.log('📊 [DEBUG] Query params:', { reportType });
     
     // Build filter based on query params
     const filter = {};
@@ -259,9 +261,13 @@ router.get('/analytics/visualizations', authenticateToken, requireAdmin, async (
       filter.reportType = reportType;
     }
     
+    console.log('📊 [DEBUG] MongoDB filter:', filter);
+    
     // Fetch visualizations with sorting
     const visualizations = await Visualization.find(filter)
       .sort({ updatedAt: -1, createdAt: -1 });
+    
+    console.log('📊 [DEBUG] Raw visualizations from DB:', visualizations.length, visualizations);
     
     // Deduplicate by visualizationId (keep latest)
     const deduped = new Map();
@@ -283,9 +289,10 @@ router.get('/analytics/visualizations', authenticateToken, requireAdmin, async (
       updatedAt: viz.updatedAt
     }));
     
+    console.log('📊 [DEBUG] Transformed visualizations:', transformedVisualizations);
     res.json(transformedVisualizations);
   } catch (error) {
-    console.error('Error fetching visualizations:', error);
+    console.error('❌ [ERROR] Error fetching visualizations:', error);
     res.status(500).json({ error: 'Internal server error' });
   }
 });
