@@ -255,25 +255,25 @@ router.get('/analytics/visualizations', authenticateToken, requireAdmin, async (
     const { reportType } = req.query;
     console.log('📊 [DEBUG] Query params:', { reportType });
     
-    // Build filter based on query params
-    const filter = {};
-    if (reportType && reportType !== 'all') {
-      filter.reportType = reportType;
-    }
+    // Build query based on reportType
+    const query = reportType && reportType !== 'all' ? { reportType } : {};
+    console.log('📊 [DEBUG] MongoDB query:', query);
     
-    console.log('📊 [DEBUG] MongoDB filter:', filter);
-    
-    // Fetch visualizations with sorting
-    const visualizations = await Visualization.find(filter)
+    // Fetch visualizations with sorting (updatedAt first, then createdAt)
+    const visualizations = await Visualization.find(query)
       .sort({ updatedAt: -1, createdAt: -1 });
     
     console.log('📊 [DEBUG] Raw visualizations from DB:', visualizations.length, visualizations);
     
-    // Deduplicate by visualizationId (keep latest)
+    // Deduplicate by visualizationId (keep latest based on updatedAt or createdAt)
     const deduped = new Map();
     visualizations.forEach(viz => {
       const key = viz.visualizationId;
-      if (!deduped.has(key) || viz.updatedAt > deduped.get(key).updatedAt) {
+      const existing = deduped.get(key);
+      const vizTime = viz.updatedAt || viz.createdAt;
+      const existingTime = existing ? (existing.updatedAt || existing.createdAt) : null;
+      
+      if (!existing || (vizTime && existingTime && vizTime > existingTime)) {
         deduped.set(key, viz);
       }
     });
@@ -309,22 +309,22 @@ router.post('/visualization/save', authenticateToken, requireAdmin, upload.singl
     // Define filter for finding existing visualization
     const filter = { visualizationId, reportType };
     
-    // Clean up previous assets
+    // Clean up previous assets if we are overwriting
     const existingVisualization = await Visualization.findOne(filter);
     if (existingVisualization) {
       // Clean up old Cloudinary image
       if (isCloudinaryConfigured && existingVisualization.imagePublicId && 
-          existingVisualization.imagePublicId !== imagePublicId) {
+          existingVisualization.imagePublicId !== imagePublicId && cloudinary) {
         try {
           await cloudinary.uploader.destroy(existingVisualization.imagePublicId);
           console.log('🗑️ Old Cloudinary image deleted:', existingVisualization.imagePublicId);
-        } catch (error) {
-          console.error('Error deleting old Cloudinary image:', error);
+        } catch (cleanupError) {
+          console.error('Failed to remove old Cloudinary visualization:', cleanupError);
         }
       }
       
       // Clean up old local file
-      if (!isCloudinaryConfigured && existingVisualization.imageUrl && 
+      else if (!isCloudinaryConfigured && existingVisualization.imageUrl && 
           existingVisualization.imageUrl.startsWith('/')) {
         try {
           const existingPath = path.join(__dirname, '../../frontend/public', existingVisualization.imageUrl);
@@ -332,32 +332,25 @@ router.post('/visualization/save', authenticateToken, requireAdmin, upload.singl
             fs.unlinkSync(existingPath);
             console.log('🗑️ Old local file deleted:', existingPath);
           }
-        } catch (error) {
-          console.error('Error deleting old local file:', error);
+        } catch (cleanupError) {
+          console.error('Failed to remove old local visualization:', cleanupError);
         }
       }
     }
 
-    // Upsert visualization (update or insert)
-    const newVisualization = {
-      visualizationId,
-      reportType,
-      imageUrl,
-      imagePublicId
-    };
-    
+    // Upsert into MongoDB so the latest image replaces any previous one
     const updatedVisualization = await Visualization.findOneAndUpdate(
       filter,
-      newVisualization,
-      { upsert: true, new: true, setDefaultsOnInsert: true }
+      { visualizationId, reportType, imageUrl, imagePublicId },
+      { new: true, upsert: true, setDefaultsOnInsert: true }
     );
     
-    console.log('✅ Visualization saved to DB and storage:', imageUrl);
+    console.log('✔ Visualization saved to DB and storage:', imageUrl);
     
     res.json({ 
       success: true, 
-      imageUrl, 
-      imagePublicId,
+      imageUrl: updatedVisualization.imageUrl,
+      imagePublicId: updatedVisualization.imagePublicId,
       visualization: {
         id: updatedVisualization.visualizationId,
         visualizationId: updatedVisualization.visualizationId,
