@@ -78,8 +78,10 @@ export default function AdminAnalytics() {
 
       if (response.ok) {
         const data = await response.json()
+        console.log('📊 Fetched visualizations:', data)
         setVisualizations(data)
       } else {
+        console.error('❌ Failed to load visualizations:', response.status, response.statusText)
         setError('Failed to load visualizations')
       }
     } catch (error) {
@@ -149,7 +151,26 @@ export default function AdminAnalytics() {
 
   const getVisualizationImage = (visualizationId) => {
     const visualization = visualizations.find(v => (v.id || v.visualizationId) === visualizationId)
-    return visualization?.imageUrl || null
+    console.log(`🔍 Looking for visualization ${visualizationId}:`, visualization)
+    
+    if (!visualization?.imageUrl) {
+      console.log(`❌ No image found for ${visualizationId}`)
+      return null
+    }
+    
+    // Handle both relative and absolute URLs
+    const imageUrl = visualization.imageUrl
+    let finalUrl
+    if (imageUrl.startsWith('http')) {
+      finalUrl = imageUrl // Already absolute
+    } else if (imageUrl.startsWith('/')) {
+      finalUrl = `${window.location.origin}${imageUrl}` // Make absolute
+    } else {
+      finalUrl = `${window.location.origin}/${imageUrl}` // Add leading slash and make absolute
+    }
+    
+    console.log(`🖼️ Image URL for ${visualizationId}:`, finalUrl)
+    return finalUrl
   }
 
   const getVisualizationType = (visualizationId) => {
