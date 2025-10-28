@@ -13,6 +13,7 @@ const Profile = require('../models/Profile');
 const Project = require('../models/Project');
 const Skill = require('../models/Skill');
 const Message = require('../models/Message');
+const Visualization = require('../models/Visualization');
 
 const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key-change-in-production';
 
@@ -247,28 +248,10 @@ router.get('/messages', authenticateToken, requireAdmin, async (req, res) => {
 // 🧾 Token verification
 router.get('/verify', authenticateToken, (req, res) => res.json({ valid: true, user: req.user }));
 
-// 📊 Get analytics visualizations
+// 📊 Get analytics visualizations from MongoDB
 router.get('/analytics/visualizations', authenticateToken, requireAdmin, async (req, res) => {
   try {
-    const reportsDir = path.join(__dirname, '../../frontend/public/reports');
-    const visualizations = [];
-    const visualizationTypes = ['time-series', 'grouped-bar', 'distribution', 'scatter', 'heatmap', 'segments', 'pie', 'multi-axis'];
-
-    visualizationTypes.forEach(vizId => {
-      const pattern = `data_analytics_${vizId}_`;
-      try {
-        const files = fs.readdirSync(reportsDir);
-        const match = files.find(f => f.startsWith(pattern));
-        visualizations.push({
-          id: vizId,
-          imageUrl: match ? `/reports/${match}` : null,
-          filename: match || null
-        });
-      } catch {
-        visualizations.push({ id: vizId, imageUrl: null, filename: null });
-      }
-    });
-
+    const visualizations = await Visualization.find().sort({ createdAt: -1 });
     res.json(visualizations);
   } catch (error) {
     console.error('Error fetching visualizations:', error);
@@ -276,30 +259,49 @@ router.get('/analytics/visualizations', authenticateToken, requireAdmin, async (
   }
 });
 
-// 📈 Save visualization (Cloudinary + local fallback)
+// 📈 Save visualization (Cloudinary + MongoDB)
 router.post('/visualization/save', authenticateToken, requireAdmin, upload.single('image'), async (req, res) => {
   try {
     if (!req.file) return res.status(400).json({ error: 'No image file provided' });
     const { visualizationId, reportType } = req.body;
     if (!visualizationId || !reportType) return res.status(400).json({ error: 'Missing visualizationId or reportType' });
 
+    let imageUrl, imagePublicId;
+
     // ☁️ Cloudinary mode
     if (isCloudinaryConfigured && req.file && req.file.path?.startsWith('http')) {
-      const imageUrl = req.file.path || req.file.secure_url;
-      const imagePublicId = req.file.filename || req.file.public_id || null;
+      imageUrl = req.file.path || req.file.secure_url;
+      imagePublicId = req.file.filename || req.file.public_id || null;
       console.log('☁️ Visualization uploaded to Cloudinary:', imageUrl);
-      return res.json({ success: true, imageUrl, imagePublicId, message: 'Visualization uploaded to Cloudinary' });
+    } else {
+      // 💾 Local fallback (dev only)
+      const fileExtension = path.extname(req.file.originalname);
+      const filename = `${reportType}_${visualizationId}_${Date.now()}${fileExtension}`;
+      const reportsDir = path.join(__dirname, '../../frontend/public/reports');
+      if (!fs.existsSync(reportsDir)) fs.mkdirSync(reportsDir, { recursive: true });
+      fs.renameSync(req.file.path, path.join(reportsDir, filename));
+      imageUrl = `/reports/${filename}`;
+      imagePublicId = null;
+      console.log('🗂 Visualization saved locally:', imageUrl);
     }
 
-    // 💾 Local fallback (dev only)
-    const fileExtension = path.extname(req.file.originalname);
-    const filename = `${reportType}_${visualizationId}_${Date.now()}${fileExtension}`;
-    const reportsDir = path.join(__dirname, '../../frontend/public/reports');
-    if (!fs.existsSync(reportsDir)) fs.mkdirSync(reportsDir, { recursive: true });
-    fs.renameSync(req.file.path, path.join(reportsDir, filename));
-    const imageUrl = `/reports/${filename}`;
-    console.log('🗂 Visualization saved locally:', imageUrl);
-    res.json({ success: true, imageUrl, message: 'Visualization saved locally (no Cloudinary active)' });
+    // 💾 Save to MongoDB
+    const visualization = new Visualization({
+      visualizationId,
+      reportType,
+      imageUrl,
+      imagePublicId
+    });
+    
+    await visualization.save();
+    console.log('✅ Visualization saved to DB and Cloudinary:', imageUrl);
+    
+    res.json({ 
+      success: true, 
+      imageUrl, 
+      imagePublicId, 
+      message: isCloudinaryConfigured ? 'Visualization uploaded to Cloudinary and saved to DB' : 'Visualization saved locally and to DB'
+    });
   } catch (error) {
     console.error('Error saving visualization:', error);
     res.status(500).json({ error: 'Internal server error' });
