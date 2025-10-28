@@ -252,7 +252,18 @@ router.get('/verify', authenticateToken, (req, res) => res.json({ valid: true, u
 router.get('/analytics/visualizations', authenticateToken, requireAdmin, async (req, res) => {
   try {
     const visualizations = await Visualization.find().sort({ createdAt: -1 });
-    res.json(visualizations);
+    
+    // Transform MongoDB documents to match frontend expectations
+    const transformedVisualizations = visualizations.map(viz => ({
+      id: viz.visualizationId, // Use visualizationId as the id field
+      visualizationId: viz.visualizationId,
+      reportType: viz.reportType,
+      imageUrl: viz.imageUrl,
+      imagePublicId: viz.imagePublicId,
+      createdAt: viz.createdAt
+    }));
+    
+    res.json(transformedVisualizations);
   } catch (error) {
     console.error('Error fetching visualizations:', error);
     res.status(500).json({ error: 'Internal server error' });
