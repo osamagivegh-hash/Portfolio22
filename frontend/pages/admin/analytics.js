@@ -14,50 +14,42 @@ export default function AdminAnalytics() {
     {
       id: 'time-series',
       name: 'Time Series Analysis',
-      description: 'Sales trends over time',
-      placeholder: '📈 Time Series Sales Chart'
+      description: 'Sales trends over time'
     },
     {
       id: 'grouped-bar',
       name: 'Sales by Region and Product Category',
-      description: 'Grouped bar chart showing sales distribution',
-      placeholder: '📊 Grouped Bar Chart'
+      description: 'Grouped bar chart showing sales distribution'
     },
     {
       id: 'distribution',
       name: 'Distribution Analysis',
-      description: 'Statistical distribution charts',
-      placeholder: '📈 Distribution Charts'
+      description: 'Statistical distribution charts'
     },
     {
       id: 'scatter',
       name: 'Income vs Sales Correlation',
-      description: 'Scatter plot showing correlation',
-      placeholder: '🔗 Scatter Plot'
+      description: 'Scatter plot showing correlation'
     },
     {
       id: 'heatmap',
       name: 'Correlation Heatmap',
-      description: 'Heatmap showing variable correlations',
-      placeholder: '🔥 Correlation Heatmap'
+      description: 'Heatmap showing variable correlations'
     },
     {
       id: 'segments',
       name: 'Customer Segments by Region',
-      description: 'Customer segmentation analysis',
-      placeholder: '👥 Customer Segments'
+      description: 'Customer segmentation analysis'
     },
     {
       id: 'pie',
       name: 'Product Category Distribution',
-      description: 'Pie chart showing product distribution',
-      placeholder: '🥧 Pie Chart'
+      description: 'Pie chart showing product distribution'
     },
     {
       id: 'multi-axis',
       name: 'Sales vs Profit Over Time',
-      description: 'Multi-axis chart comparison',
-      placeholder: '📊 Multi-Axis Chart'
+      description: 'Multi-axis chart comparison'
     }
   ]
 
@@ -117,28 +109,28 @@ export default function AdminAnalytics() {
 
       if (response.ok) {
         const result = await response.json()
-        const updatedVisualization = result.visualization || {
-          id: visualizationId,
-          visualizationId,
-          reportType: 'data_analytics',
-          imageUrl: result.imageUrl,
-          imagePublicId: result.imagePublicId
-        }
+        console.log('✅ Upload successful:', result)
         
-        setMessage(`✅ ${visualizationTypes.find(v => v.id === visualizationId)?.name} updated successfully!`)
-        
-        // Update the visualization in state (insert if missing)
+        // Update the visualization in state
         setVisualizations(prev => {
           const exists = prev.some(v => (v.id || v.visualizationId) === visualizationId)
           if (exists) {
             return prev.map(v => 
               (v.id || v.visualizationId) === visualizationId 
-                ? { ...v, ...updatedVisualization }
+                ? { ...v, imageUrl: result.imageUrl }
                 : v
             )
           }
-          return [...prev, updatedVisualization]
+          return [...prev, {
+            id: visualizationId,
+            visualizationId,
+            reportType: 'data_analytics',
+            imageUrl: result.imageUrl,
+            imagePublicId: result.imagePublicId
+          }]
         })
+        
+        setMessage(`✅ ${visualizationTypes.find(v => v.id === visualizationId)?.name} updated successfully!`)
       } else {
         setError('Failed to upload visualization')
       }
@@ -188,125 +180,93 @@ export default function AdminAnalytics() {
   }
 
   return (
-    <>
+    <AdminLayout>
       <Head>
-        <title>Analytics Management - Admin Dashboard</title>
+        <title>Analytics Dashboard - Admin</title>
       </Head>
       
-      <AdminLayout>
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          <div className="mb-8">
-            <h1 className="text-3xl font-bold text-gray-900 mb-2">
-              Data Analytics Report Management
-            </h1>
-            <p className="text-gray-600">
-              Manage visualizations for the Data Analytics Dashboard report
-            </p>
+      <div className="space-y-6">
+        <div className="flex justify-between items-center">
+          <h1 className="text-3xl font-bold text-gray-900">Analytics Dashboard</h1>
+        </div>
+
+        {message && (
+          <div className="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded">
+            {message}
           </div>
+        )}
 
-          {message && (
-            <div className="mb-6 bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded">
-              {message}
-            </div>
-          )}
+        {error && (
+          <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
+            {error}
+          </div>
+        )}
 
-          {error && (
-            <div className="mb-6 bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
-              {error}
-            </div>
-          )}
-
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {visualizationTypes.map((viz) => {
-              const currentImage = getVisualizationImage(viz.id)
-              const isUploading = uploadingVisualization === viz.id
-              
-              return (
-                <div key={viz.id} className="bg-white rounded-lg shadow-md p-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {visualizationTypes.map((viz) => {
+            const currentImage = getVisualizationImage(viz.id)
+            const isUploading = uploadingVisualization === viz.id
+            
+            return (
+              <div key={viz.id} className="bg-white rounded-lg shadow-md overflow-hidden">
+                <div className="p-4">
                   <h3 className="text-lg font-semibold text-gray-900 mb-2">
                     {viz.name}
                   </h3>
                   <p className="text-sm text-gray-600 mb-4">
                     {viz.description}
                   </p>
-                  
-                  <div className="mb-4">
-                    <div className="w-full h-48 bg-gray-100 rounded-lg flex items-center justify-center overflow-hidden">
-                      {currentImage ? (
-                        <img 
-                          src={currentImage} 
-                          alt={viz.name}
-                          className="w-full h-full object-cover"
-                        />
-                      ) : (
-                        <div className="text-center text-gray-500">
-                          <div className="text-4xl mb-2">{viz.placeholder}</div>
-                          <div className="text-sm">No image uploaded</div>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-
-                  <div className="space-y-2">
-                    <input
-                      type="file"
-                      id={`upload-${viz.id}`}
-                      accept="image/*"
-                      onChange={(e) => {
-                        const file = e.target.files[0]
-                        if (file) {
-                          handleImageUpload(viz.id, file)
-                        }
-                      }}
-                      className="hidden"
-                    />
-                    
-                    <label
-                      htmlFor={`upload-${viz.id}`}
-                      className={`w-full block text-center py-2 px-4 rounded-md cursor-pointer transition-colors ${
-                        isUploading 
-                          ? 'bg-gray-400 text-white cursor-not-allowed' 
-                          : 'bg-primary-600 text-white hover:bg-primary-700'
-                      }`}
-                    >
-                      {isUploading ? 'Uploading...' : (currentImage ? 'Update Image' : 'Upload Image')}
-                    </label>
-
-                    {currentImage && (
-                      <button
-                        onClick={() => {
-                          // Remove image functionality could be added here
-                          setMessage(`Image removed for ${viz.name}`)
+                </div>
+                
+                <div className="px-4 pb-4">
+                  <div className="w-full h-48 bg-gray-100 rounded-lg flex items-center justify-center overflow-hidden mb-4">
+                    {currentImage ? (
+                      <img 
+                        src={currentImage} 
+                        alt={viz.name}
+                        className="w-full h-full object-cover"
+                        onError={(e) => {
+                          console.error('Image failed to load:', currentImage)
+                          e.target.style.display = 'none'
                         }}
-                        className="w-full py-2 px-4 bg-red-600 text-white rounded-md hover:bg-red-700 transition-colors"
-                      >
-                        Remove Image
-                      </button>
+                      />
+                    ) : (
+                      <div className="text-center text-gray-500">
+                        <div className="text-4xl mb-2">📊</div>
+                        <div className="text-sm">No image uploaded</div>
+                      </div>
                     )}
                   </div>
-                </div>
-              )
-            })}
-          </div>
 
-          <div className="mt-8 p-6 bg-blue-50 rounded-lg">
-            <h3 className="text-lg font-semibold text-blue-900 mb-2">
-              📊 Preview Report
-            </h3>
-            <p className="text-blue-700 mb-4">
-              View how your visualizations appear in the public report
-            </p>
-            <a
-              href="/reports/data_analytics_report.html"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-block bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition-colors"
-            >
-              Open Report Preview
-            </a>
-          </div>
+                  <input
+                    type="file"
+                    id={`upload-${viz.id}`}
+                    accept="image/*"
+                    onChange={(e) => {
+                      const file = e.target.files[0]
+                      if (file) {
+                        handleImageUpload(viz.id, file)
+                      }
+                    }}
+                    className="hidden"
+                  />
+                  
+                  <label
+                    htmlFor={`upload-${viz.id}`}
+                    className={`w-full block text-center py-2 px-4 rounded-md cursor-pointer transition-colors ${
+                      isUploading 
+                        ? 'bg-gray-400 text-white cursor-not-allowed' 
+                        : 'bg-primary-600 text-white hover:bg-primary-700'
+                    }`}
+                  >
+                    {isUploading ? 'Uploading...' : currentImage ? 'Update Image' : 'Upload Image'}
+                  </label>
+                </div>
+              </div>
+            )
+          })}
         </div>
-      </AdminLayout>
-    </>
+      </div>
+    </AdminLayout>
   )
 }
