@@ -11,46 +11,14 @@ export default function AdminAnalytics() {
 
   // Define the visualizations that can be managed
   const visualizationTypes = [
-    {
-      id: 'time-series',
-      name: 'Time Series Analysis',
-      description: 'Sales trends over time'
-    },
-    {
-      id: 'grouped-bar',
-      name: 'Sales by Region and Product Category',
-      description: 'Grouped bar chart showing sales distribution'
-    },
-    {
-      id: 'distribution',
-      name: 'Distribution Analysis',
-      description: 'Statistical distribution charts'
-    },
-    {
-      id: 'scatter',
-      name: 'Income vs Sales Correlation',
-      description: 'Scatter plot showing correlation'
-    },
-    {
-      id: 'heatmap',
-      name: 'Correlation Heatmap',
-      description: 'Heatmap showing variable correlations'
-    },
-    {
-      id: 'segments',
-      name: 'Customer Segments by Region',
-      description: 'Customer segmentation analysis'
-    },
-    {
-      id: 'pie',
-      name: 'Product Category Distribution',
-      description: 'Pie chart showing product distribution'
-    },
-    {
-      id: 'multi-axis',
-      name: 'Sales vs Profit Over Time',
-      description: 'Multi-axis chart comparison'
-    }
+    { id: 'time-series', name: 'Time Series Analysis', description: 'Sales trends over time' },
+    { id: 'grouped-bar', name: 'Sales by Region and Product Category', description: 'Grouped bar chart showing sales distribution' },
+    { id: 'distribution', name: 'Distribution Analysis', description: 'Statistical distribution charts' },
+    { id: 'scatter', name: 'Income vs Sales Correlation', description: 'Scatter plot showing correlation' },
+    { id: 'heatmap', name: 'Correlation Heatmap', description: 'Heatmap showing variable correlations' },
+    { id: 'segments', name: 'Customer Segments by Region', description: 'Customer segmentation analysis' },
+    { id: 'pie', name: 'Product Category Distribution', description: 'Pie chart showing product distribution' },
+    { id: 'multi-axis', name: 'Sales vs Profit Over Time', description: 'Multi-axis chart comparison' }
   ]
 
   useEffect(() => {
@@ -60,13 +28,12 @@ export default function AdminAnalytics() {
   const fetchVisualizations = async () => {
     try {
       const token = localStorage.getItem('adminToken')
-      const response = await fetch(process.env.NEXT_PUBLIC_API_URL 
-        ? `${process.env.NEXT_PUBLIC_API_URL}/api/admin/analytics/visualizations`
-        : '/api/admin/analytics/visualizations', {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      })
+      const response = await fetch(
+        process.env.NEXT_PUBLIC_API_URL
+          ? `${process.env.NEXT_PUBLIC_API_URL}/api/admin/analytics/visualizations`
+          : '/api/admin/analytics/visualizations',
+        { headers: { 'Authorization': `Bearer ${token}` } }
+      )
 
       if (response.ok) {
         const data = await response.json()
@@ -85,7 +52,6 @@ export default function AdminAnalytics() {
 
   const handleImageUpload = async (visualizationId, file) => {
     if (!file) return
-
     setUploadingVisualization(visualizationId)
     setMessage('')
     setError('')
@@ -97,26 +63,29 @@ export default function AdminAnalytics() {
       formData.append('reportType', 'data_analytics')
 
       const token = localStorage.getItem('adminToken')
-      const response = await fetch(process.env.NEXT_PUBLIC_API_URL 
-        ? `${process.env.NEXT_PUBLIC_API_URL}/api/admin/visualization/save`
-        : '/api/admin/visualization/save', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`
-        },
-        body: formData
-      })
+      const response = await fetch(
+        process.env.NEXT_PUBLIC_API_URL
+          ? `${process.env.NEXT_PUBLIC_API_URL}/api/admin/visualization/save`
+          : '/api/admin/visualization/save',
+        {
+          method: 'POST',
+          headers: { 'Authorization': `Bearer ${token}` },
+          body: formData
+        }
+      )
 
       if (response.ok) {
         const result = await response.json()
         console.log('✅ Upload successful:', result)
         
-        // Update the visualization in state
+        // Update state
         setVisualizations(prev => {
-          const exists = prev.some(v => (v.id || v.visualizationId) === visualizationId)
+          const exists = prev.some(v => 
+            v.visualizationId === visualizationId || v.id === visualizationId || v._id === visualizationId
+          )
           if (exists) {
             return prev.map(v => 
-              (v.id || v.visualizationId) === visualizationId 
+              (v.visualizationId === visualizationId || v.id === visualizationId || v._id === visualizationId)
                 ? { ...v, imageUrl: result.imageUrl }
                 : v
             )
@@ -141,29 +110,13 @@ export default function AdminAnalytics() {
     }
   }
 
+  // ✅ Simplified & fixed version
   const getVisualizationImage = (visualizationId) => {
-    console.log('🔍 All visualizations:', visualizations)
-    const visualization = visualizations.find(v => (v.id || v.visualizationId) === visualizationId)
-    console.log(`🔍 Looking for visualization ${visualizationId}:`, visualization)
-    
-    if (!visualization?.imageUrl) {
-      console.log(`❌ No image found for ${visualizationId}`)
-      return null
-    }
-    
-    // Handle both relative and absolute URLs
-    const imageUrl = visualization.imageUrl
-    let finalUrl
-    if (imageUrl.startsWith('http')) {
-      finalUrl = imageUrl // Already absolute
-    } else if (imageUrl.startsWith('/')) {
-      finalUrl = `${window.location.origin}${imageUrl}` // Make absolute
-    } else {
-      finalUrl = `${window.location.origin}/${imageUrl}` // Add leading slash and make absolute
-    }
-    
-    console.log(`🖼️ Image URL for ${visualizationId}:`, finalUrl)
-    return finalUrl
+    const v = visualizations.find(
+      item => item.visualizationId === visualizationId || item.id === visualizationId || item._id === visualizationId
+    )
+    if (!v?.imageUrl) return null
+    return v.imageUrl // Cloudinary URLs are absolute
   }
 
   const getVisualizationType = (visualizationId) => {
