@@ -45,7 +45,7 @@ app.use(helmet({
 
 // CORS configuration
 app.use(cors({
-  origin: process.env.NODE_ENV === 'production' ? false : true, // Disable CORS in production since we serve from same domain
+  origin: true, // Allow all origins
   credentials: true
 }));
 

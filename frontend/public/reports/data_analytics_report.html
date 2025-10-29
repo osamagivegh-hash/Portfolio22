@@ -449,6 +449,7 @@ Standard             20803.04  145.48   143  66.73</div><div class="insight-item
                     });
                 } else {
                     // Use public endpoint for non-admin users
+                    console.log('No admin token, using public endpoint');
                     response = await fetch('/api/visualizations');
                 }
 
@@ -500,6 +501,7 @@ Standard             20803.04  145.48   143  66.73</div><div class="insight-item
                     console.error('Failed to load visualizations:', response.status, response.statusText);
                     const errorText = await response.text();
                     console.error('Error response:', errorText);
+                    console.error('Response headers:', response.headers);
                 }
             } catch (error) {
                 console.error('Error loading visualizations:', error);
