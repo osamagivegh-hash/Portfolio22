@@ -149,6 +149,47 @@ app.get('/api/storage/status', (req, res) => {
 app.use('/api/admin', adminRoutes);
 console.log('[SERVER DEBUG] Admin routes mounted at /api/admin');
 
+// Public visualization route (no authentication required)
+app.get('/api/visualizations', async (req, res) => {
+  try {
+    const Visualization = require('./models/Visualization');
+    const { reportType } = req.query;
+    
+    const query = reportType && reportType !== 'all' ? { reportType } : {};
+    const visualizations = await Visualization.find(query)
+      .sort({ updatedAt: -1, createdAt: -1 });
+    
+    // Deduplicate by visualizationId (keep latest)
+    const deduped = new Map();
+    visualizations.forEach(viz => {
+      const key = viz.visualizationId;
+      const existing = deduped.get(key);
+      const vizTime = viz.updatedAt || viz.createdAt;
+      const existingTime = existing ? (existing.updatedAt || existing.createdAt) : null;
+      
+      if (!existing || (vizTime && existingTime && vizTime > existingTime)) {
+        deduped.set(key, viz);
+      }
+    });
+    
+    // Transform for frontend
+    const transformedVisualizations = Array.from(deduped.values()).map(viz => ({
+      id: viz.visualizationId,
+      visualizationId: viz.visualizationId,
+      reportType: viz.reportType,
+      imageUrl: viz.imageUrl,
+      imagePublicId: viz.imagePublicId,
+      createdAt: viz.createdAt,
+      updatedAt: viz.updatedAt
+    }));
+    
+    res.json(transformedVisualizations);
+  } catch (error) {
+    console.error('Error fetching public visualizations:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
 // Debug: Log all API routes
 console.log('Admin routes loaded successfully');
 

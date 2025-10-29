@@ -436,17 +436,21 @@ Standard             20803.04  145.48   143  66.73</div><div class="insight-item
         async function loadExistingVisualizations() {
             try {
                 const token = localStorage.getItem('adminToken');
-                if (!token) {
-                    console.log('No admin token found, skipping visualization load');
-                    return;
-                }
-
+                
                 console.log('Loading existing visualizations...');
-                const response = await fetch('/api/admin/analytics/visualizations', {
-                    headers: {
-                        'Authorization': `Bearer ${token}`
-                    }
-                });
+                
+                // Try to load with admin token first, then fallback to public endpoint
+                let response;
+                if (token) {
+                    response = await fetch('/api/admin/analytics/visualizations', {
+                        headers: {
+                            'Authorization': `Bearer ${token}`
+                        }
+                    });
+                } else {
+                    // Use public endpoint for non-admin users
+                    response = await fetch('/api/visualizations');
+                }
 
                 if (response.ok) {
                     const visualizations = await response.json();
