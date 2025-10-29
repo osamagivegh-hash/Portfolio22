@@ -190,7 +190,23 @@ export default function AdminAnalytics() {
         <div className="bg-gray-100 p-4 rounded-md">
           <h3 className="font-semibold mb-2">Debug Info:</h3>
           <p>Total visualizations loaded: {visualizations.length}</p>
-          <pre className="text-xs bg-white p-2 rounded overflow-auto max-h-32">
+          <div className="mt-2">
+            <h4 className="font-medium">Test Image URLs:</h4>
+            {visualizations.slice(0, 2).map((viz, index) => (
+              <div key={index} className="mt-2">
+                <p className="text-sm font-medium">{viz.id}:</p>
+                <img 
+                  src={viz.imageUrl} 
+                  alt={viz.id}
+                  className="w-20 h-20 object-cover border"
+                  onLoad={() => console.log(`✅ Test image ${viz.id} loaded`)}
+                  onError={() => console.log(`❌ Test image ${viz.id} failed`)}
+                />
+                <p className="text-xs text-gray-600 break-all">{viz.imageUrl}</p>
+              </div>
+            ))}
+          </div>
+          <pre className="text-xs bg-white p-2 rounded overflow-auto max-h-32 mt-2">
             {JSON.stringify(visualizations, null, 2)}
           </pre>
         </div>
@@ -199,6 +215,8 @@ export default function AdminAnalytics() {
           {visualizationTypes.map((viz) => {
             const currentImage = getVisualizationImage(viz.id)
             const isUploading = uploadingVisualization === viz.id
+            
+            console.log(`Rendering ${viz.id}:`, { currentImage, isUploading })
             
             return (
               <div key={viz.id} className="bg-white rounded-lg shadow-md overflow-hidden">
@@ -218,8 +236,9 @@ export default function AdminAnalytics() {
                         src={currentImage} 
                         alt={viz.name}
                         className="w-full h-full object-cover"
+                        onLoad={() => console.log(`✅ Image loaded for ${viz.id}:`, currentImage)}
                         onError={(e) => {
-                          console.error('Image failed to load:', currentImage)
+                          console.error(`❌ Image failed to load for ${viz.id}:`, currentImage)
                           e.target.style.display = 'none'
                         }}
                       />
