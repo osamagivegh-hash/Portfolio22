@@ -441,6 +441,7 @@ Standard             20803.04  145.48   143  66.73</div><div class="insight-item
                     return;
                 }
 
+                console.log('Loading existing visualizations...');
                 const response = await fetch('/api/admin/analytics/visualizations', {
                     headers: {
                         'Authorization': `Bearer ${token}`
@@ -449,21 +450,44 @@ Standard             20803.04  145.48   143  66.73</div><div class="insight-item
 
                 if (response.ok) {
                     const visualizations = await response.json();
-                    console.log('Loaded visualizations:', visualizations);
+                    console.log('Loaded visualizations from server:', visualizations);
+                    console.log('Number of visualizations:', visualizations.length);
                     
                     // Update each visualization placeholder with saved image
                     visualizations.forEach(viz => {
+                        console.log(`Processing visualization:`, viz);
+                        console.log(`Looking for placeholder with ID: ${viz.id}-placeholder`);
+                        
                         const placeholder = document.getElementById(viz.id + '-placeholder');
+                        console.log(`Found placeholder:`, placeholder);
+                        
                         if (placeholder) {
                             const img = placeholder.querySelector('img');
+                            console.log(`Found img element:`, img);
+                            
                             if (img && viz.imageUrl) {
+                                console.log(`Setting image source for ${viz.id}:`, viz.imageUrl);
                                 img.src = viz.imageUrl;
-                                console.log(`Updated ${viz.id} with image:`, viz.imageUrl);
+                                
+                                // Add error handling for image load
+                                img.onerror = function() {
+                                    console.error(`Failed to load image for ${viz.id}:`, viz.imageUrl);
+                                };
+                                
+                                img.onload = function() {
+                                    console.log(`Successfully loaded image for ${viz.id}`);
+                                };
+                            } else {
+                                console.log(`No image URL for ${viz.id} or no img element found`);
                             }
+                        } else {
+                            console.log(`No placeholder found for ${viz.id}`);
                         }
                     });
                 } else {
-                    console.error('Failed to load visualizations:', response.status);
+                    console.error('Failed to load visualizations:', response.status, response.statusText);
+                    const errorText = await response.text();
+                    console.error('Error response:', errorText);
                 }
             } catch (error) {
                 console.error('Error loading visualizations:', error);
