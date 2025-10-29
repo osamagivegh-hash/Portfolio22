@@ -344,6 +344,13 @@ Standard             20803.04  145.48   143  66.73</div><div class="insight-item
         // Function to save visualization to server
         async function saveVisualization(visualizationId, file) {
             try {
+                // Get admin token from localStorage
+                const token = localStorage.getItem('adminToken');
+                if (!token) {
+                    alert('You must be logged in as admin to save visualizations. Please log in first.');
+                    return;
+                }
+
                 const formData = new FormData();
                 formData.append('image', file);
                 formData.append('visualizationId', visualizationId);
@@ -351,6 +358,9 @@ Standard             20803.04  145.48   143  66.73</div><div class="insight-item
 
                 const response = await fetch('/api/admin/visualization/save', {
                     method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    },
                     body: formData
                 });
 
@@ -363,7 +373,13 @@ Standard             20803.04  145.48   143  66.73</div><div class="insight-item
                         const result = await response.json();
                         img.src = result.imageUrl;
                     }
+                } else if (response.status === 401) {
+                    alert('Authentication failed. Please log in again as admin.');
+                    // Redirect to admin login
+                    window.location.href = '/admin/login';
                 } else {
+                    const errorText = await response.text();
+                    console.error('Save failed:', response.status, errorText);
                     alert('Failed to save visualization. Please try again.');
                 }
             } catch (error) {
