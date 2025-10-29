@@ -432,10 +432,51 @@ Standard             20803.04  145.48   143  66.73</div><div class="insight-item
             }
         }
 
+        // Function to load existing visualizations from server
+        async function loadExistingVisualizations() {
+            try {
+                const token = localStorage.getItem('adminToken');
+                if (!token) {
+                    console.log('No admin token found, skipping visualization load');
+                    return;
+                }
+
+                const response = await fetch('/api/admin/analytics/visualizations', {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+
+                if (response.ok) {
+                    const visualizations = await response.json();
+                    console.log('Loaded visualizations:', visualizations);
+                    
+                    // Update each visualization placeholder with saved image
+                    visualizations.forEach(viz => {
+                        const placeholder = document.getElementById(viz.id + '-placeholder');
+                        if (placeholder) {
+                            const img = placeholder.querySelector('img');
+                            if (img && viz.imageUrl) {
+                                img.src = viz.imageUrl;
+                                console.log(`Updated ${viz.id} with image:`, viz.imageUrl);
+                            }
+                        }
+                    });
+                } else {
+                    console.error('Failed to load visualizations:', response.status);
+                }
+            } catch (error) {
+                console.error('Error loading visualizations:', error);
+            }
+        }
+
         // Add hover effects for edit buttons
         document.addEventListener('DOMContentLoaded', function() {
             // Check if user is admin by looking for admin token
             checkAdminStatus();
+            
+            // Load existing visualizations
+            loadExistingVisualizations();
             
             const editButtons = document.querySelectorAll('.edit-btn');
             editButtons.forEach(btn => {
