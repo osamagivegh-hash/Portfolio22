@@ -461,25 +461,33 @@ Standard             20803.04  145.48   143  66.73</div><div class="insight-item
                         const placeholder = document.getElementById(viz.id + '-placeholder');
                         console.log(`Found placeholder:`, placeholder);
                         
-                        if (placeholder) {
-                            const img = placeholder.querySelector('img');
-                            console.log(`Found img element:`, img);
+                        if (placeholder && viz.imageUrl) {
+                            // Clear the placeholder content
+                            placeholder.innerHTML = '';
                             
-                            if (img && viz.imageUrl) {
-                                console.log(`Setting image source for ${viz.id}:`, viz.imageUrl);
-                                img.src = viz.imageUrl;
-                                
-                                // Add error handling for image load
-                                img.onerror = function() {
-                                    console.error(`Failed to load image for ${viz.id}:`, viz.imageUrl);
-                                };
-                                
-                                img.onload = function() {
-                                    console.log(`Successfully loaded image for ${viz.id}`);
-                                };
-                            } else {
-                                console.log(`No image URL for ${viz.id} or no img element found`);
-                            }
+                            // Create and add the image element
+                            const img = document.createElement('img');
+                            img.src = viz.imageUrl;
+                            img.style.width = '100%';
+                            img.style.height = '100%';
+                            img.style.objectFit = 'cover';
+                            img.style.borderRadius = '10px';
+                            
+                            // Add error handling for image load
+                            img.onerror = function() {
+                                console.error(`Failed to load image for ${viz.id}:`, viz.imageUrl);
+                                // Show fallback text if image fails to load
+                                placeholder.innerHTML = `<div style="display: flex; align-items: center; justify-content: center; color: white; font-size: 18px;">📊 ${viz.id.replace('-', ' ').replace(/\b\w/g, l => l.toUpperCase())}</div>`;
+                            };
+                            
+                            img.onload = function() {
+                                console.log(`Successfully loaded image for ${viz.id}`);
+                            };
+                            
+                            placeholder.appendChild(img);
+                            console.log(`Added image for ${viz.id}:`, viz.imageUrl);
+                        } else if (placeholder) {
+                            console.log(`No image URL for ${viz.id}`);
                         } else {
                             console.log(`No placeholder found for ${viz.id}`);
                         }
