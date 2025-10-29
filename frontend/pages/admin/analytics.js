@@ -38,6 +38,9 @@ export default function AdminAnalytics() {
       if (response.ok) {
         const data = await response.json()
         console.log('📊 Fetched visualizations:', data)
+        console.log('📊 Number of visualizations:', data.length)
+        console.log('📊 Visualization IDs:', data.map(v => v.id || v.visualizationId))
+        console.log('📊 Visualization URLs:', data.map(v => v.imageUrl))
         setVisualizations(data)
       } else {
         console.error('❌ Failed to load visualizations:', response.status, response.statusText)
@@ -110,13 +113,34 @@ export default function AdminAnalytics() {
     }
   }
 
-  // ✅ Simplified & fixed version
+  // ✅ Fixed image URL handling for both Cloudinary and local images
   const getVisualizationImage = (visualizationId) => {
     const v = visualizations.find(
       item => item.visualizationId === visualizationId || item.id === visualizationId || item._id === visualizationId
     )
-    if (!v?.imageUrl) return null
-    return v.imageUrl // Cloudinary URLs are absolute
+    
+    console.log(`Looking for visualization ${visualizationId}:`, v)
+    
+    if (!v?.imageUrl) {
+      console.log(`No image found for ${visualizationId}`)
+      return null
+    }
+    
+    // Handle both Cloudinary URLs (absolute) and local URLs (relative)
+    const imageUrl = v.imageUrl
+    if (imageUrl.startsWith('http://') || imageUrl.startsWith('https://')) {
+      console.log(`Cloudinary URL for ${visualizationId}:`, imageUrl)
+      return imageUrl // Already absolute
+    } else if (typeof window !== 'undefined') {
+      // Make relative URLs absolute for local images
+      const absoluteUrl = imageUrl.startsWith('/') 
+        ? `${window.location.origin}${imageUrl}`
+        : `${window.location.origin}/${imageUrl}`
+      console.log(`Local URL for ${visualizationId}:`, absoluteUrl)
+      return absoluteUrl
+    }
+    
+    return imageUrl
   }
 
   const getVisualizationType = (visualizationId) => {
