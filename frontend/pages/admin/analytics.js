@@ -142,6 +142,7 @@ export default function AdminAnalytics() {
   }
 
   const getVisualizationImage = (visualizationId) => {
+    console.log('🔍 All visualizations:', visualizations)
     const visualization = visualizations.find(v => (v.id || v.visualizationId) === visualizationId)
     console.log(`🔍 Looking for visualization ${visualizationId}:`, visualization)
     
@@ -188,6 +189,12 @@ export default function AdminAnalytics() {
       <div className="space-y-6">
         <div className="flex justify-between items-center">
           <h1 className="text-3xl font-bold text-gray-900">Analytics Dashboard</h1>
+          <button
+            onClick={fetchVisualizations}
+            className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition-colors"
+          >
+            Refresh Data
+          </button>
         </div>
 
         {message && (
@@ -201,6 +208,15 @@ export default function AdminAnalytics() {
             {error}
           </div>
         )}
+
+        {/* Debug section */}
+        <div className="bg-gray-100 p-4 rounded-md">
+          <h3 className="font-semibold mb-2">Debug Info:</h3>
+          <p>Total visualizations loaded: {visualizations.length}</p>
+          <pre className="text-xs bg-white p-2 rounded overflow-auto max-h-32">
+            {JSON.stringify(visualizations, null, 2)}
+          </pre>
+        </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {visualizationTypes.map((viz) => {
