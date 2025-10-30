@@ -441,19 +441,31 @@ Standard             20803.04  145.48   143  66.73</div><div class="insight-item
                 
                 // Try to load with admin token first, then fallback to public endpoint
                 let response;
+                let usingPublicEndpoint = false;
+                
                 if (token) {
+                    console.log('🔑 Admin token found, trying admin endpoint');
                     response = await fetch('/api/admin/analytics/visualizations', {
                         headers: {
                             'Authorization': `Bearer ${token}`
                         }
                     });
+                    
+                    // If admin endpoint fails (token expired, etc.), fallback to public
+                    if (!response.ok) {
+                        console.log('⚠️ Admin endpoint failed, falling back to public endpoint');
+                        usingPublicEndpoint = true;
+                        response = await fetch('/api/visualizations');
+                    }
                 } else {
                     // Use public endpoint for non-admin users
-                    console.log('No admin token, using public endpoint');
+                    console.log('🌐 No admin token, using public endpoint');
+                    usingPublicEndpoint = true;
                     response = await fetch('/api/visualizations');
                 }
 
                 if (response.ok) {
+                    console.log(`✅ Successfully loaded from ${usingPublicEndpoint ? 'public' : 'admin'} endpoint`);
                     const visualizations = await response.json();
                     console.log('Loaded visualizations from server:', visualizations);
                     console.log('Number of visualizations:', visualizations.length);
