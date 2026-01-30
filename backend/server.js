@@ -12,6 +12,9 @@ const connectDB = require('./config/database');
 // Import admin routes
 const adminRoutes = require('./routes/admin');
 
+// Import video routes
+const videoRoutes = require('./routes/videos');
+
 const app = express();
 const PORT = process.env.PORT || 5000;
 
@@ -71,7 +74,7 @@ app.get('/api/health', (req, res) => {
   const frontendExists = fs.existsSync(frontendPath);
   const indexPath = path.join(frontendPath, 'index.html');
   const indexExists = fs.existsSync(indexPath);
-  
+
   res.json({
     status: 'ok',
     timestamp: new Date().toISOString(),
@@ -149,16 +152,20 @@ app.get('/api/storage/status', (req, res) => {
 app.use('/api/admin', adminRoutes);
 console.log('[SERVER DEBUG] Admin routes mounted at /api/admin');
 
+// Video routes
+app.use('/api/videos', videoRoutes);
+console.log('[SERVER DEBUG] Video routes mounted at /api/videos');
+
 // Public visualization route (no authentication required)
 app.get('/api/visualizations', async (req, res) => {
   try {
     const Visualization = require('./models/Visualization');
     const { reportType } = req.query;
-    
+
     const query = reportType && reportType !== 'all' ? { reportType } : {};
     const visualizations = await Visualization.find(query)
       .sort({ updatedAt: -1, createdAt: -1 });
-    
+
     // Deduplicate by visualizationId (keep latest)
     const deduped = new Map();
     visualizations.forEach(viz => {
@@ -166,12 +173,12 @@ app.get('/api/visualizations', async (req, res) => {
       const existing = deduped.get(key);
       const vizTime = viz.updatedAt || viz.createdAt;
       const existingTime = existing ? (existing.updatedAt || existing.createdAt) : null;
-      
+
       if (!existing || (vizTime && existingTime && vizTime > existingTime)) {
         deduped.set(key, viz);
       }
     });
-    
+
     // Transform for frontend
     const transformedVisualizations = Array.from(deduped.values()).map(viz => ({
       id: viz.visualizationId,
@@ -182,7 +189,7 @@ app.get('/api/visualizations', async (req, res) => {
       createdAt: viz.createdAt,
       updatedAt: viz.updatedAt
     }));
-    
+
     res.json(transformedVisualizations);
   } catch (error) {
     console.error('Error fetching public visualizations:', error);
@@ -196,11 +203,11 @@ console.log('Admin routes loaded successfully');
 app.post('/api/contact', async (req, res) => {
   try {
     const { name, email, message } = req.body;
-    
+
     // Validate required fields
     if (!name || !email || !message) {
-      return res.status(400).json({ 
-        error: 'Missing required fields: name, email, and message are required' 
+      return res.status(400).json({
+        error: 'Missing required fields: name, email, and message are required'
       });
     }
 
@@ -226,14 +233,14 @@ app.post('/api/contact', async (req, res) => {
       timestamp: new Date().toISOString()
     });
 
-    res.json({ 
-      success: true, 
-      message: 'Thank you for your message! I will get back to you soon.' 
+    res.json({
+      success: true,
+      message: 'Thank you for your message! I will get back to you soon.'
     });
   } catch (error) {
     console.error('Error processing contact form:', error);
-    res.status(500).json({ 
-      error: 'Internal server error. Please try again later.' 
+    res.status(500).json({
+      error: 'Internal server error. Please try again later.'
     });
   }
 });
@@ -255,20 +262,20 @@ app.get('*', (req, res) => {
   if (req.path.startsWith('/api/')) {
     return res.status(404).json({ error: 'API endpoint not found' });
   }
-  
+
   // Check if frontend build exists before serving
   if (!fs.existsSync(frontendPath)) {
-    return res.status(500).json({ 
-      error: 'Frontend not built. Please run the build command first.' 
+    return res.status(500).json({
+      error: 'Frontend not built. Please run the build command first.'
     });
   }
-  
+
   const indexPath = path.join(frontendPath, 'index.html');
   if (fs.existsSync(indexPath)) {
     res.sendFile(indexPath);
   } else {
-    res.status(500).json({ 
-      error: 'Frontend build incomplete. index.html not found.' 
+    res.status(500).json({
+      error: 'Frontend build incomplete. index.html not found.'
     });
   }
 });
@@ -284,13 +291,13 @@ const startServer = async () => {
   try {
     // Connect to MongoDB
     await connectDB();
-    
+
     // Start server
     app.listen(PORT, () => {
       console.log(`Server is running on port ${PORT}`);
       console.log(`Environment: ${process.env.NODE_ENV || 'development'}`);
       console.log(`Frontend path: ${frontendPath}`);
-      
+
       // Log storage mode
       try {
         const { isCloudinaryConfigured } = require('./config/storage');
@@ -298,7 +305,7 @@ const startServer = async () => {
       } catch (e) {
         console.warn('Storage status check failed:', e);
       }
-      
+
       // Production warning for missing Cloudinary
       if (process.env.NODE_ENV === 'production') {
         try {

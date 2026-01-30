@@ -1,6 +1,6 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  output: 'export',
+  output: process.env.NODE_ENV === 'production' ? 'export' : undefined,
   trailingSlash: true,
   images: {
     unoptimized: true
@@ -12,6 +12,19 @@ const nextConfig = {
   distDir: 'out',
   generateBuildId: async () => {
     return 'build-' + Date.now()
+  },
+  // Rewrites for development mode to proxy API requests to backend
+  async rewrites() {
+    // Only apply rewrites in development
+    if (process.env.NODE_ENV === 'production') {
+      return []
+    }
+    return [
+      {
+        source: '/api/:path*',
+        destination: 'http://localhost:5000/api/:path*',
+      },
+    ]
   }
 }
 
