@@ -27,7 +27,7 @@ const categories = [
 ]
 
 export default function Projects() {
-  const [portfolioData, setPortfolioData] = useState(null)
+  const [allProjects, setAllProjects] = useState([])
   const [filteredProjects, setFilteredProjects] = useState([])
   const [isLoading, setIsLoading] = useState(true)
   const [selectedCategory, setSelectedCategory] = useState('all')
@@ -37,11 +37,46 @@ export default function Projects() {
   useEffect(() => {
     const loadData = async () => {
       try {
-        const data = await fetchPortfolioData()
-        setPortfolioData(data)
-        setFilteredProjects(data?.projects || [])
+        // Fetch both projects and videos
+        const [portfolioData, videosResponse] = await Promise.all([
+          fetchPortfolioData(),
+          fetch('/api/videos').then(res => res.ok ? res.json() : []).catch(() => [])
+        ])
+
+        // Get projects from portfolio
+        const projects = portfolioData?.projects || []
+
+        // Convert videos to project format and merge
+        const videosAsProjects = (videosResponse || []).map(video => ({
+          id: video._id || video.id,
+          title: video.title,
+          description: video.description,
+          businessDescription: video.businessDescription,
+          technologies: video.technologies || [],
+          category: video.category,
+          featured: video.featured,
+          hasVideo: true,
+          videoUrl: video.videoUrl,
+          videoThumbnailUrl: video.thumbnailUrl,
+          image: video.thumbnailUrl,
+          demo: video.demoUrl,
+          github: video.githubUrl,
+          views: video.views,
+          duration: video.duration,
+          isVideoProject: true, // Flag to identify video-based projects
+        }))
+
+        // Merge projects and videos (videos first to prioritize demos)
+        // Filter out duplicates if a project already has the same video
+        const projectVideoUrls = projects.filter(p => p.videoUrl).map(p => p.videoUrl)
+        const uniqueVideos = videosAsProjects.filter(v => !projectVideoUrls.includes(v.videoUrl))
+
+        const mergedProjects = [...uniqueVideos, ...projects]
+
+        setAllProjects(mergedProjects)
+        setFilteredProjects(mergedProjects)
       } catch (error) {
-        console.error('Error loading portfolio data:', error)
+        console.error('Error loading data:', error)
       } finally {
         setIsLoading(false)
       }
@@ -51,16 +86,14 @@ export default function Projects() {
 
   // Filter projects by category
   useEffect(() => {
-    if (!portfolioData?.projects) return
-
     if (selectedCategory === 'all') {
-      setFilteredProjects(portfolioData.projects)
+      setFilteredProjects(allProjects)
     } else {
       setFilteredProjects(
-        portfolioData.projects.filter(p => p.category === selectedCategory)
+        allProjects.filter(p => p.category === selectedCategory)
       )
     }
-  }, [selectedCategory, portfolioData])
+  }, [selectedCategory, allProjects])
 
   const handlePlayVideo = (project) => {
     if (project.videoUrl) {
@@ -70,6 +103,14 @@ export default function Projects() {
       })
       setIsModalOpen(true)
     }
+  }
+
+  // Format duration
+  const formatDuration = (seconds) => {
+    if (!seconds) return ''
+    const mins = Math.floor(seconds / 60)
+    const secs = Math.floor(seconds % 60)
+    return `${mins}:${secs.toString().padStart(2, '0')}`
   }
 
   const featuredProjects = filteredProjects.filter(p => p.featured)
@@ -164,14 +205,14 @@ export default function Projects() {
                     <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
                       {featuredProjects.map((project, index) => (
                         <div
-                          key={project.id}
+                          key={project.id || index}
                           className="card group overflow-hidden animate-fade-in"
                           style={{ animationDelay: `${index * 0.1}s` }}
                         >
                           {/* Project Image/Video */}
                           <div className="relative overflow-hidden rounded-lg mb-6 aspect-video">
                             <img
-                              src={project.image?.startsWith('http') ? project.image : `${typeof window !== 'undefined' ? window.location.origin : ''}${project.image || '/project-default.jpg'}`}
+                              src={project.videoThumbnailUrl || project.image || '/project-default.jpg'}
                               alt={project.title}
                               className="w-full h-full object-cover transform group-hover:scale-105 transition-transform duration-500"
                               onError={(e) => {
@@ -205,6 +246,13 @@ export default function Projects() {
                               </div>
                             )}
 
+                            {/* Duration Badge for videos */}
+                            {project.duration && (
+                              <div className="absolute bottom-4 right-4 px-2 py-1 bg-black/70 rounded-md text-xs text-white">
+                                {formatDuration(project.duration)}
+                              </div>
+                            )}
+
                             {/* Video Badge */}
                             {project.hasVideo && (
                               <div className="absolute top-4 right-4 px-2 py-1 bg-black/70 rounded-md flex items-center gap-1 text-xs text-white">
@@ -228,10 +276,20 @@ export default function Projects() {
 
                             {/* Tech Stack */}
                             <div className="flex flex-wrap gap-2">
-                              {project.technologies?.map((tech) => (
-                                <span key={tech} className="tag text-xs">{tech}</span>
+                              {project.technologies?.map((tech, i) => (
+                                <span key={i} className="tag text-xs">{tech}</span>
                               ))}
                             </div>
+
+                            {/* Views count for video projects */}
+                            {project.views !== undefined && (
+                              <div className="flex items-center gap-1 text-slate-500 text-sm">
+                                <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+                                  <path d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z" />
+                                </svg>
+                                {project.views} views
+                              </div>
+                            )}
 
                             {/* Actions */}
                             <div className="flex gap-3 pt-4 border-t border-white/5">
@@ -287,14 +345,14 @@ export default function Projects() {
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                       {regularProjects.map((project, index) => (
                         <div
-                          key={project.id}
+                          key={project.id || index}
                           className="card group animate-fade-in"
                           style={{ animationDelay: `${index * 0.05}s` }}
                         >
                           {/* Project Thumbnail */}
                           <div className="relative overflow-hidden rounded-lg mb-4 aspect-video">
                             <img
-                              src={project.image?.startsWith('http') ? project.image : `${typeof window !== 'undefined' ? window.location.origin : ''}${project.image || '/project-default.jpg'}`}
+                              src={project.videoThumbnailUrl || project.image || '/project-default.jpg'}
                               alt={project.title}
                               className="w-full h-full object-cover transform group-hover:scale-105 transition-transform duration-500"
                               onError={(e) => {
@@ -324,6 +382,13 @@ export default function Projects() {
                                 </span>
                               </div>
                             )}
+
+                            {/* Duration */}
+                            {project.duration && (
+                              <div className="absolute bottom-2 right-2 px-1.5 py-0.5 bg-black/70 rounded text-xs text-white">
+                                {formatDuration(project.duration)}
+                              </div>
+                            )}
                           </div>
 
                           {/* Info */}
@@ -337,8 +402,8 @@ export default function Projects() {
 
                           {/* Tech Stack */}
                           <div className="flex flex-wrap gap-1.5 mb-4">
-                            {project.technologies?.slice(0, 4).map((tech) => (
-                              <span key={tech} className="tag text-xs">{tech}</span>
+                            {project.technologies?.slice(0, 4).map((tech, i) => (
+                              <span key={i} className="tag text-xs">{tech}</span>
                             ))}
                             {project.technologies?.length > 4 && (
                               <span className="tag text-xs">+{project.technologies.length - 4}</span>

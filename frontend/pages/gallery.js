@@ -75,7 +75,8 @@ export default function Gallery() {
                 ? window.location.origin
                 : process.env.NEXT_PUBLIC_API_URL || ''
 
-            await fetch(`${baseUrl}/api/videos/${video.id}/view`, {
+            const videoId = video._id || video.id
+            await fetch(`${baseUrl}/api/videos/${videoId}/view`, {
                 method: 'POST',
             })
         } catch (err) {
@@ -123,8 +124,8 @@ export default function Gallery() {
                                         key={cat.value}
                                         onClick={() => setSelectedCategory(cat.value)}
                                         className={`px-4 py-2 rounded-full text-sm font-medium transition-all duration-300 ${selectedCategory === cat.value
-                                                ? 'bg-gradient-primary text-white shadow-glow'
-                                                : 'bg-dark-tertiary text-slate-400 hover:text-white hover:bg-dark-card-hover'
+                                            ? 'bg-gradient-primary text-white shadow-glow'
+                                            : 'bg-dark-tertiary text-slate-400 hover:text-white hover:bg-dark-card-hover'
                                             }`}
                                     >
                                         {cat.label}
@@ -171,7 +172,7 @@ export default function Gallery() {
                                         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                                             {featuredVideos.map((video) => (
                                                 <VideoCard
-                                                    key={video.id}
+                                                    key={video._id || video.id}
                                                     video={video}
                                                     onClick={handleVideoClick}
                                                     featured
@@ -192,7 +193,7 @@ export default function Gallery() {
                                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                                         {regularVideos.map((video, index) => (
                                             <div
-                                                key={video.id}
+                                                key={video._id || video.id}
                                                 className="animate-fade-in"
                                                 style={{ animationDelay: `${index * 0.1}s` }}
                                             >
